@@ -10,6 +10,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const editForm = document.getElementById('editForm');
     const mensagemEditarDiv = document.getElementById('mensagem_editar');
 
+    // Campos de Data do Formulário de Registro
+    const entryAdmissao = document.getElementById('data_admissao');
+    const entryAniversario = document.getElementById('data_aniversario');
+    const entryLicenca = document.getElementById('data_retorno_licenca');
+
+    // Campos de Data do Formulário de Edição
+    const entryAdmissaoEditar = document.getElementById('data_admissao_editar');
+    const entryAniversarioEditar = document.getElementById('data_aniversario_editar');
+    const entryLicencaEditar = document.getElementById('data_retorno_licenca_editar');
+
+    // --- Função para formatar a data automaticamente (DD/MM/AAAA) ---
+    function formatarData(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+
+        // Se o evento for de backspace, não adiciona barras automaticamente para não atrapalhar
+        if (event.inputType === 'deleteContentBackward') {
+            input.value = value;
+            return;
+        }
+
+        if (value.length > 2 && value.length <= 4) {
+            value = value.substring(0, 2) + '/' + value.substring(2);
+        } else if (value.length > 4) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4, 8);
+        }
+        input.value = value;
+    }
+
+    // --- Atribuir a função de formatação aos campos de data ---
+    entryAdmissao.addEventListener('input', formatarData);
+    entryAniversario.addEventListener('input', formatarData);
+    entryLicenca.addEventListener('input', formatarData);
+
+    entryAdmissaoEditar.addEventListener('input', formatarData);
+    entryAniversarioEditar.addEventListener('input', formatarData);
+    entryLicencaEditar.addEventListener('input', formatarData);
+
+
     // Função para exibir mensagem
     function showMessage(divElement, message, type) {
         divElement.textContent = message;
@@ -83,18 +122,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirmacao) {
                 try {
                     const response = await fetch(`/deletar_funcionario/${funcionarioId}`, {
-                        method: 'POST', // Usamos POST para exclusão
+                        method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json' // Pode enviar um corpo vazio, mas é bom especificar
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({}) // Corpo vazio ou { "id": funcionarioId }
+                        body: JSON.stringify({})
                     });
 
                     const result = await response.json();
 
                     if (response.ok) {
                         showMessage(mensagemDiv, result.message, 'success');
-                        await carregarPessoas(); // Recarrega a lista para mostrar a remoção
+                        await carregarPessoas();
                     } else {
                         showMessage(mensagemDiv, result.message, 'error');
                     }
