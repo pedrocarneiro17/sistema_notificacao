@@ -150,7 +150,7 @@ def check_daily_notifications_job():
                 corpo = f"""
                 <html>
                 <body>
-                    <p>Olá Gestor(a)s,</p>
+                    <p>Olá Gestores,</p>
                     <p>Um(a) ou mais evento(s) importante(s) se aproxima(m):</p>
                     <ul>
                         <li>Faltam <b>{tipo_evento_notificacao.split('(')[1].replace(')', '')}</b> para o(s) {tipo_evento_notificacao.split('(')[0].strip()} de: <b>{lista_nomes}</b></li>
@@ -247,7 +247,7 @@ def send_monthly_summary_job():
             assunto = f"Resumo RH: Nenhuma Data Importante para {datetime.date(ano_analise_num, mes_analise_num, 1).strftime('%B/%Y')}"
             corpo_html = f"""
             <html><body>
-                <p>Olá Gestor(a)s,</p>
+                <p>Olá Gestores,</p>
                 <p>Não há datas importantes agendadas para {datetime.date(ano_analise_num, mes_analise_num, 1).strftime('%B de %Y')}.</p>
                 <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
             </body></html>
@@ -263,7 +263,7 @@ def send_monthly_summary_job():
             corpo_html = f"""
             <html>
             <body>
-                <p>Olá Gestor(a)s,</p>
+                <p>Olá Gestores,</p>
                 <p>Segue o resumo das datas importantes para <b>{datetime.date(ano_analise_num, mes_analise_num, 1).strftime('%B de %Y')}</b>:</p>
                 <ul>
                     {''.join(corpo_eventos)}
