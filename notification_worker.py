@@ -40,29 +40,27 @@ def delete_licenca_passada():
 # --- Configurações de E-mail (Lidas das VARIÁVEIS DE AMBIENTE!) ---
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "seu_email_para_envio@gmail.com")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "sua_senha_de_aplicativo_do_gmail")
-# NOVO: Lendo a string com múltiplos e-mails e dividindo-a em uma lista
 MANAGER_EMAILS_STR = os.environ.get("EMAIL_MANAGER", "email_do_gestor@exemplo.com")
-LISTA_EMAILS_GESTOR = [e.strip() for e in MANAGER_EMAILS_STR.split(',') if e.strip()] # Divide e remove espaços/entradas vazias
+LISTA_EMAILS_GESTOR = [e.strip() for e in MANAGER_EMAILS_STR.split(',') if e.strip()]
 
 EMAIL_SMTP_SERVER = "smtp.gmail.com"
 EMAIL_SMTP_PORT = 587
 
-def enviar_email(destinatarios_email, assunto, corpo_html): # Alterado para receber uma lista
+def enviar_email(destinatarios_email, assunto, corpo_html):
     """
     Função para enviar e-mail via SMTP do Gmail para múltiplos destinatários.
     """
     if not EMAIL_SENDER or not EMAIL_PASSWORD:
         print("Erro: Credenciais de e-mail do remetente não configuradas. Verifique as variáveis de ambiente EMAIL_SENDER e EMAIL_PASSWORD.")
         return False
-    if not destinatarios_email: # Verifica se a lista de destinatários está vazia
+    if not destinatarios_email:
         print("Erro: Nenhum e-mail de destinatário especificado.")
         return False
 
     msg = MIMEMultipart("alternative")
     msg["From"] = EMAIL_SENDER
     msg["Subject"] = assunto
-    # O cabeçalho "To" pode conter múltiplos e-mails separados por vírgula
-    msg["To"] = ", ".join(destinatarios_email) # Junta a lista em uma string separada por vírgula
+    msg["To"] = ", ".join(destinatarios_email)
 
     msg.attach(MIMEText(corpo_html, "html"))
 
@@ -70,7 +68,6 @@ def enviar_email(destinatarios_email, assunto, corpo_html): # Alterado para rece
         with smtplib.SMTP(EMAIL_SMTP_SERVER, EMAIL_SMTP_PORT) as server:
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            # send_message aceita uma lista de destinatários na segunda posição
             server.send_message(msg, from_addr=EMAIL_SENDER, to_addrs=destinatarios_email)
         print(f"E-mail enviado com sucesso para {', '.join(destinatarios_email)} - Assunto: '{assunto}'.")
         return True
@@ -84,11 +81,21 @@ def enviar_email(destinatarios_email, assunto, corpo_html): # Alterado para rece
 def verificar_datas_para_notificacao():
     print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando verificação de datas para notificação por e-mail...")
     hoje = datetime.date.today()
+    print(f"DEBUG: Data atual (hoje): {hoje.strftime('%d/%m/%Y')}") # DEBUG
+
     funcionarios = get_all_funcionarios()
+
+    if not funcionarios:
+        print("DEBUG: NENHUM FUNCIONÁRIO ENCONTRADO NO BANCO DE DADOS.") # DEBUG
+        # Além disso, verifique a persistência do banco de dados (Volume) no Railway!
+        # Se os dados não estão sendo salvos ou lidos, esse é o problema.
+    else:
+        print(f"DEBUG: {len(funcionarios)} funcionários encontrados no banco de dados.") # DEBUG
+        for func in funcionarios:
+            print(f"DEBUG: Processando funcionário: ID={func['id']}, Nome={func['nome']}, Admissão={func['data_admissao']}, Aniversário={func['data_aniversario']}, Licença={func['data_retorno_licenca']}") # DEBUG
 
     delete_licenca_passada()
 
-    # Usa a lista de e-mails do gestor já processada
     destinatarios_gestor = LISTA_EMAILS_GESTOR
     if not destinatarios_gestor:
         print("ERRO CRÍTICO: E-mail(s) do gestor (EMAIL_MANAGER) não configurado(s) ou inválido(s). As notificações não serão enviadas.")
@@ -100,67 +107,73 @@ def verificar_datas_para_notificacao():
         data_aniversario_str = func['data_aniversario']
         data_retorno_licenca_str = func['data_retorno_licenca']
 
-        # Notificação de Aniversário
-        aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
-        aniversario_este_ano = aniversario_data_obj.replace(year=hoje.year)
-        if aniversario_este_ano < hoje:
-            aniversario_este_ano = aniversario_data_obj.replace(year=hoje.year + 1)
-        dias_para_aniversario = (aniversario_este_ano - hoje).days
-
-        if dias_para_aniversario == 15 or dias_para_aniversario == 10:
-            assunto = f"Lembrete RH: Aniversário de {nome} em breve!"
-            corpo = f"""
-            <html>
-            <body>
-                <p>Olá Gestor(a)s,</p>
-                <p>É um prazer informar que faltam <b>{dias_para_aniversario} dias</b> para o aniversário de <b>{nome}</b>!</p>
-                <p>A data especial é <b>{aniversario_data_obj.strftime('%d/%m')}</b>.</p>
-                <p>Vamos celebrar juntos!</p>
-                <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
-            </body>
-            </html>
-            """
-            enviar_email(destinatarios_gestor, assunto, corpo) # Enviando para a lista de gestores
-
-        # Notificação de Admissão
-        admissao_data_obj = datetime.datetime.strptime(data_admissao_str, '%d/%m/%Y').date()
-        admissao_este_ano = admissao_data_obj.replace(year=hoje.year)
-        if admissao_este_ano < hoje:
-            admissao_este_ano = admissao_data_obj.replace(year=hoje.year + 1)
-        dias_para_admissao = (admissao_este_ano - hoje).days
-
-        if dias_para_admissao == 15 or dias_para_admissao == 10:
-            assunto = f"Lembrete RH: Aniversário de Admissão de {nome}!"
-            corpo = f"""
-            <html>
-            <body>
-                <p>Olá Gestor(a)s,</p>
-                <p>Faltam <b>{dias_para_admissao} dias</b> para o aniversário de admissão de <b>{nome}</b>!</p>
-                <p>Ele(a) foi admitido(a) em <b>{admissao_data_obj.strftime('%d/%m/%Y')}</b>.</p>
-                <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
-            </body>
-            </html>
-            """
-            enviar_email(destinatarios_gestor, assunto, corpo) # Enviando para a lista de gestores
-
-        # Notificação de Retorno de Licença
-        if data_retorno_licenca_str:
-            licenca_data_obj = datetime.datetime.strptime(data_retorno_licenca_str, '%d/%m/%Y').date()
-            dias_para_licenca = (licenca_data_obj - hoje).days
-
-            if dias_para_licenca == 15 or dias_para_licenca == 10:
-                assunto = f"Lembrete RH: Retorno de Licença de {nome}"
+        # --- Teste para Aniversário (qualquer dia do mês atual) ---
+        try:
+            aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
+            # NOTIFICA SE O MÊS DE ANIVERSÁRIO É O MÊS ATUAL
+            if aniversario_data_obj.month == hoje.month: # <-- MUDANÇA AQUI PARA TESTE
+                print(f"DEBUG: *** ACIONADO (ANIVERSÁRIO - MÊS ATUAL) PARA {nome} em {aniversario_data_obj.strftime('%d/%m')} ***") # DEBUG
+                assunto = f"Lembrete RH: Aniversário de {nome} neste mês!"
                 corpo = f"""
                 <html>
                 <body>
                     <p>Olá Gestor(a)s,</p>
-                    <p>Faltam <b>{dias_para_licenca} dias</b> para o retorno de licença de <b>{nome}</b>!</p>
-                    <p>A data prevista de retorno é <b>{licenca_data_obj.strftime('%d/%m/%Y')}</b>.</p>
+                    <p>Faltam {aniversario_data_obj.day - hoje.day} dias para o aniversário de <b>{nome}</b>!</p>
+                    <p>A data especial é <b>{aniversario_data_obj.strftime('%d/%m')}</b>.</p>
+                    <p>Vamos celebrar juntos!</p>
                     <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
                 </body>
                 </html>
                 """
-                enviar_email(destinatarios_gestor, assunto, corpo) # Enviando para a lista de gestores
+                enviar_email(destinatarios_gestor, assunto, corpo)
+        except ValueError:
+            print(f"AVISO: Formato de data de aniversário inválido para {nome}: {data_aniversario_str}")
+
+
+        # --- Teste para Admissão (qualquer dia do mês atual) ---
+        try:
+            admissao_data_obj = datetime.datetime.strptime(data_admissao_str, '%d/%m/%Y').date()
+            # NOTIFICA SE O MÊS DE ADMISSÃO É O MÊS ATUAL
+            if admissao_data_obj.month == hoje.month: # <-- MUDANÇA AQUI PARA TESTE
+                print(f"DEBUG: *** ACIONADO (ADMISSÃO - MÊS ATUAL) PARA {nome} em {admissao_data_obj.strftime('%d/%m/%Y')} ***") # DEBUG
+                assunto = f"Lembrete RH: Aniversário de Admissão de {nome} neste mês!"
+                corpo = f"""
+                <html>
+                <body>
+                    <p>Olá Gestor(a)s,</p>
+                    <p>Faltam {admissao_data_obj.day - hoje.day} dias para o aniversário de admissão de <b>{nome}</b>!</p>
+                    <p>Ele(a) foi admitido(a) em <b>{admissao_data_obj.strftime('%d/%m/%Y')}</b>.</p>
+                    <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
+                </body>
+                </html>
+                """
+                enviar_email(destinatarios_gestor, assunto, corpo)
+        except ValueError:
+            print(f"AVISO: Formato de data de admissão inválido para {nome}: {data_admissao_str}")
+
+
+        # --- Teste para Retorno de Licença (qualquer dia do mês atual) ---
+        if data_retorno_licenca_str:
+            try:
+                licenca_data_obj = datetime.datetime.strptime(data_retorno_licenca_str, '%d/%m/%Y').date()
+                # NOTIFICA SE O MÊS DE RETORNO É O MÊS ATUAL
+                if licenca_data_obj.month == hoje.month: # <-- MUDANÇA AQUI PARA TESTE
+                    print(f"DEBUG: *** ACIONADO (LICENÇA - MÊS ATUAL) PARA {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} ***") # DEBUG
+                    assunto = f"Lembrete RH: Retorno de Licença de {nome} neste mês!"
+                    corpo = f"""
+                    <html>
+                    <body>
+                        <p>Olá Gestor(a)s,</p>
+                        <p>Faltam {licenca_data_obj.day - hoje.day} dias para o retorno de licença de <b>{nome}</b>!</p>
+                        <p>A data prevista de retorno é <b>{licenca_data_obj.strftime('%d/%m/%Y')}</b>.</p>
+                        <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
+                    </body>
+                    </html>
+                    """
+                    enviar_email(destinatarios_gestor, assunto, corpo)
+            except ValueError:
+                print(f"AVISO: Formato de data de retorno de licença inválido para {nome}: {data_retorno_licenca_str}")
+
     print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Verificação de datas para e-mail concluída.")
 
 if __name__ == "__main__":
@@ -173,7 +186,6 @@ if __name__ == "__main__":
             data_admissao TEXT NOT NULL,
             data_aniversario TEXT NOT NULL,
             data_retorno_licenca TEXT
-            -- 'email' do funcionário não é mais usado aqui para notificações
         )
     ''')
     conn.commit()
