@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Datas</title>
+    <title>Gerenciador de Datas Importantes</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Gerenciador de Datas</h1>
+        <h1>Gerenciador de Datas Importantes</h1>
 
         <div class="section">
             <h2>Registrar Nova Pessoa</h2>
@@ -29,6 +29,7 @@
                     <label for="data_retorno_licenca">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca" name="data_retorno_licenca" placeholder="Ex: 10/03/2025">
                 </div>
+                {# CAMPO 'EMAIL' REMOVIDO AQUI #}
                 <button type="submit">Salvar Pessoa</button>
             </form>
             <div id="mensagem" class="message"></div>
@@ -44,11 +45,11 @@
                         <th>Admissão</th>
                         <th>Aniversário</th>
                         <th>Retorno Licença</th>
+                        {# COLUNA 'E-MAIL' REMOVIDA AQUI #}
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {# Loop para exibir os funcionários passados pelo Flask #}
                     {% for funcionario in funcionarios %}
                     <tr>
                         <td>{{ funcionario.id }}</td>
@@ -56,9 +57,10 @@
                         <td>{{ funcionario.data_admissao }}</td>
                         <td>{{ funcionario.data_aniversario }}</td>
                         <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
+                        {# EXIBIÇÃO DO E-MAIL REMOVIDA AQUI #}
                         <td>
                             <button class="editar-btn" data-id="{{ funcionario.id }}">Editar</button>
-                            <button class="deletar-btn" data-id="{{ funcionario.id }}">Excluir</button> {# NEW BUTTON #}
+                            <button class="deletar-btn" data-id="{{ funcionario.id }}">Excluir</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -90,6 +92,7 @@
                     <label for="data_retorno_licenca_editar">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca_editar" name="data_retorno_licenca_editar">
                 </div>
+                {# CAMPO 'EMAIL' REMOVIDO AQUI NO MODAL #}
                 <button type="submit">Salvar Edição</button>
             </form>
             <div id="mensagem_editar" class="message"></div>

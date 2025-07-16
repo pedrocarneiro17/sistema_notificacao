@@ -14,18 +14,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const entryAdmissao = document.getElementById('data_admissao');
     const entryAniversario = document.getElementById('data_aniversario');
     const entryLicenca = document.getElementById('data_retorno_licenca');
+    // REMOVIDO: const entryEmail = document.getElementById('email');
 
     // Campos de Data do Formulário de Edição
     const entryAdmissaoEditar = document.getElementById('data_admissao_editar');
     const entryAniversarioEditar = document.getElementById('data_aniversario_editar');
     const entryLicencaEditar = document.getElementById('data_retorno_licenca_editar');
+    // REMOVIDO: const entryEmailEditar = document.getElementById('email_editar');
 
     // --- Função para formatar a data automaticamente (DD/MM/AAAA) ---
     function formatarData(event) {
         let input = event.target;
-        let value = input.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        let value = input.value.replace(/\D/g, '');
 
-        // Se o evento for de backspace, não adiciona barras automaticamente para não atrapalhar
         if (event.inputType === 'deleteContentBackward') {
             input.value = value;
             return;
@@ -104,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('data_admissao_editar').value = funcionario.data_admissao;
                     document.getElementById('data_aniversario_editar').value = funcionario.data_aniversario;
                     document.getElementById('data_retorno_licenca_editar').value = funcionario.data_retorno_licenca || '';
+                    // REMOVIDO: document.getElementById('email_editar').value = funcionario.email;
 
                     editModal.style.display = 'flex';
                 } else {
@@ -114,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage(mensagemDiv, 'Erro ao carregar dados para edição.', 'error');
             }
         }
-        // --- Lógica de Exclusão (adicionada aqui) ---
+        // --- Lógica de Exclusão ---
         else if (event.target.classList.contains('deletar-btn')) {
             const funcionarioId = event.target.dataset.id;
             const confirmacao = confirm("Tem certeza que deseja excluir esta pessoa?");
