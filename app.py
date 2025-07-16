@@ -10,22 +10,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-import locale # NOVO: Importa o módulo locale
+# REMOVIDO: import locale # Não precisamos mais do módulo locale
 
-# --- Define o locale para português do Brasil ---
-# Isso deve ser feito logo no início do arquivo
-try:
-    # Tenta definir o locale para pt_BR.UTF-8
-    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
-except locale.Error:
-    # Se pt_BR.UTF-8 não estiver disponível no sistema (menos comum em Linux),
-    # tenta uma alternativa ou imprime um aviso.
-    print("AVISO: Não foi possível definir o locale para 'pt_BR.UTF-8'. Tentando 'pt_BR' ou usando nomes de mês padrão.")
-    try:
-        locale.setlocale(locale.LC_TIME, 'pt_BR')
-    except locale.Error:
-        print("AVISO: Não foi possível definir o locale para 'pt_BR'. Os nomes dos meses podem não sair em português.")
-        # Como fallback, pode-se usar um dicionário manual, mas vamos tentar o locale primeiro.
+# REMOVIDO: O bloco try-except para locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+
+# NOVO: Dicionário para mapear números dos meses para nomes em português
+MESES_EM_PORTUGUES = {
+    1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril",
+    5: "maio", 6: "junho", 7: "julho", 8: "agosto",
+    9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
+}
 
 
 app = Flask(__name__)
@@ -156,13 +150,13 @@ def check_daily_notifications_job():
         else:
             for (data_evento, tipo_evento_notificacao), nomes_funcionarios in eventos_para_notificar.items():
                 lista_nomes = ", ".join(nomes_funcionarios)
-                # O replace(', ', ' e ', -1) é para o último 'e'
-                assunto = f"Lembrete RH: {tipo_evento_notificacao.capitalize()} de {lista_nomes.replace(', ', ' e ', lista_nomes.count(',') - lista_nomes.count(',') % 1)}"
-                if lista_nomes.count(',') > 0: # Ajusta para mais de um 'e' se houver mais de 2 nomes
-                   assunto = f"Lembrete RH: {tipo_evento_notificacao.capitalize()} de {', '.join(nomes_funcionarios[:-1])} e {nomes_funcionarios[-1]}"
+                # Ajusta para mais de um 'e' se houver mais de 2 nomes no assunto
+                if len(nomes_funcionarios) > 1:
+                   assunto_nomes = f"{', '.join(nomes_funcionarios[:-1])} e {nomes_funcionarios[-1]}"
                 else:
-                   assunto = f"Lembrete RH: {tipo_evento_notificacao.capitalize()} de {nomes_funcionarios[0]}"
+                   assunto_nomes = nomes_funcionarios[0]
 
+                assunto = f"Lembrete RH: {tipo_evento_notificacao.capitalize()} de {assunto_nomes}"
 
                 corpo = f"""
                 <html>
@@ -189,17 +183,19 @@ def send_monthly_summary_job():
         print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando envio de resumo mensal de datas importantes...")
         hoje = datetime.date.today()
 
-        # Para garantir que pegue o mês atual se roda no dia 1, ou o próximo mês se for um teste manual
-        # (o agendamento real para `day=1` sempre pegará o mês correto)
+        # Decide qual mês analisar (o atual se for dia 1, ou o próximo se for um teste manual)
         mes_analise_data = hoje
-        if hoje.day != 1: # Se não for o dia 1, assume que estamos testando para o próximo mês
-            mes_analise_data = hoje.replace(day=1) + datetime.timedelta(days=32)
-            mes_analise_data = mes_analise_data.replace(day=1) # Volta para o dia 1 do próximo mês
+        if hoje.day != 1:
+            mes_analise_data = (hoje.replace(day=1) + datetime.timedelta(days=32)).replace(day=1) # Próximo mês
 
         mes_analise_num = mes_analise_data.month
         ano_analise_num = mes_analise_data.year
 
-        print(f"DEBUG_MENSAL: Mês/Ano de análise para resumo: {mes_analise_num:02d}/{ano_analise_num}")
+        # NOVO: Obtém o nome do mês em português do dicionário
+        nome_do_mes_pt = MESES_EM_PORTUGUES.get(mes_analise_num, f"Mês {mes_analise_num}")
+
+
+        print(f"DEBUG_MENSAL: Mês/Ano de análise para resumo: {nome_do_mes_pt.capitalize()}/{ano_analise_num}")
 
         funcionarios = get_all_funcionarios()
 
@@ -253,23 +249,19 @@ def send_monthly_summary_job():
                     print(f"AVISO_MENSAL: Formato de data de retorno de licença inválido para {nome}: {data_retorno_licenca_str}")
 
         # --- Enviar E-mail de Resumo Mensal ---
-        # Passa o nome do mês usando o locale configurado
-        nome_do_mes = datetime.date(ano_analise_num, mes_analise_num, 1).strftime('%B')
-
         if not resumo_mensal_eventos:
-            print(f"DEBUG_MENSAL: Nenhum evento encontrado para o mês {nome_do_mes}/{ano_analise_num}.")
-            assunto = f"Resumo RH: Nenhuma Data Importante para {nome_do_mes.capitalize()}/{ano_analise_num}"
+            print(f"DEBUG_MENSAL: Nenhum evento encontrado para o mês {nome_do_mes_pt}/{ano_analise_num}.")
+            assunto = f"Resumo RH: Nenhuma Data Importante para {nome_do_mes_pt.capitalize()}/{ano_analise_num}"
             corpo_html = f"""
             <html><body>
                 <p>Olá Gestor(a)s,</p>
-                <p>Não há datas importantes agendadas para {nome_do_mes.capitalize()} de {ano_analise_num}.</p>
+                <p>Não há datas importantes agendadas para {nome_do_mes_pt.capitalize()} de {ano_analise_num}.</p>
                 <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
             </body></html>
             """
         else:
-            assunto = f"Resumo RH: Datas Importantes para {nome_do_mes.capitalize()}/{ano_analise_num}"
+            assunto = f"Resumo RH: Datas Importantes para {nome_do_mes_pt.capitalize()}/{ano_analise_num}"
             corpo_eventos = []
-            # Ordena os eventos por data
             for data_evento in sorted(resumo_mensal_eventos.keys()):
                 eventos_do_dia = resumo_mensal_eventos[data_evento]
                 corpo_eventos.append(f"<li><b>{data_evento.strftime('%d/%m')}</b>: {'; '.join(eventos_do_dia)}</li>")
@@ -278,7 +270,7 @@ def send_monthly_summary_job():
             <html>
             <body>
                 <p>Olá Gestor(a)s,</p>
-                <p>Segue o resumo das datas importantes para <b>{nome_do_mes.capitalize()} de {ano_analise_num}</b>:</p>
+                <p>Segue o resumo das datas importantes para <b>{nome_do_mes_pt.capitalize()} de {ano_analise_num}</b>:</p>
                 <ul>
                     {''.join(corpo_eventos)}
                 </ul>
