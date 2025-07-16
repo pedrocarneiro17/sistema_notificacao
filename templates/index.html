@@ -29,7 +29,6 @@
                     <label for="data_retorno_licenca">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca" name="data_retorno_licenca" placeholder="Ex: 10/03/2025">
                 </div>
-                {# CAMPO 'EMAIL' REMOVIDO AQUI #}
                 <button type="submit">Salvar Pessoa</button>
             </form>
             <div id="mensagem" class="message"></div>
@@ -40,24 +39,23 @@
             <table id="pessoasTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        {# REMOVIDO: <th>ID</th> #}
                         <th>Nome</th>
                         <th>Admissão</th>
                         <th>Aniversário</th>
                         <th>Retorno Licença</th>
-                        {# COLUNA 'E-MAIL' REMOVIDA AQUI #}
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {# Loop para exibir os funcionários passados pelo Flask #}
                     {% for funcionario in funcionarios %}
                     <tr>
-                        <td>{{ funcionario.id }}</td>
+                        {# REMOVIDO: <td>{{ funcionario.id }}</td> #}
                         <td>{{ funcionario.nome }}</td>
                         <td>{{ funcionario.data_admissao }}</td>
                         <td>{{ funcionario.data_aniversario }}</td>
                         <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
-                        {# EXIBIÇÃO DO E-MAIL REMOVIDA AQUI #}
                         <td>
                             <button class="editar-btn" data-id="{{ funcionario.id }}">Editar</button>
                             <button class="deletar-btn" data-id="{{ funcionario.id }}">Excluir</button>
@@ -75,7 +73,7 @@
             <span class="close-button">&times;</span>
             <h2>Editar Pessoa</h2>
             <form id="editForm">
-                <input type="hidden" id="id_editar" name="id_editar">
+                <input type="hidden" id="id_editar" name="id_editar"> {# ID ainda é necessário, mas está oculto #}
                 <div class="form-group">
                     <label for="nome_editar">Nome:</label>
                     <input type="text" id="nome_editar" name="nome_editar" required>
@@ -92,7 +90,6 @@
                     <label for="data_retorno_licenca_editar">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca_editar" name="data_retorno_licenca_editar">
                 </div>
-                {# CAMPO 'EMAIL' REMOVIDO AQUI NO MODAL #}
                 <button type="submit">Salvar Edição</button>
             </form>
             <div id="mensagem_editar" class="message"></div>
