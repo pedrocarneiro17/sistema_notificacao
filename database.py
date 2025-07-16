@@ -1,8 +1,9 @@
 # database.py
 import sqlite3
 import datetime
+import os
 
-DATABASE_NAME = "datas_importantes.db"
+DATABASE_NAME = os.path.join("/mnt/data/", "datas_importantes.db")
 
 def connect_db():
     conn = sqlite3.connect(DATABASE_NAME)

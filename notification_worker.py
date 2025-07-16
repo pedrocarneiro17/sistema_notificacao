@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # --- Configurações do Banco de Dados ---
-DATABASE_NAME = os.path.join(os.getcwd(), "datas_importantes.db")
+DATABASE_NAME = os.path.join("/mnt/data/", "datas_importantes.db")
 
 def connect_db():
     conn = sqlite3.connect(DATABASE_NAME)
