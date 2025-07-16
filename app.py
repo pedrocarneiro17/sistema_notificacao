@@ -1,10 +1,10 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 from database import insert_funcionario, get_all_funcionarios, create_table, get_funcionario_by_id, update_funcionario, delete_funcionario, delete_licenca_passada
 import datetime
 from flask_apscheduler import APScheduler
 
-# --- Importações para E-mail (do notification_worker.py) ---
+# --- Importações para E-mail ---
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -15,7 +15,7 @@ scheduler = APScheduler()
 scheduler.init_app(app)
 scheduler.start()
 
-# --- Configurações de E-mail (VÃO PARA AS VARIÁVEIS DE AMBIENTE DO SERVIÇO 'web'!) ---
+# --- Configurações de E-mail (Lidas das VARIÁVEIS DE AMBIENTE!) ---
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "seu_email_para_envio@gmail.com")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "sua_senha_de_aplicativo_do_gmail")
 MANAGER_EMAILS_STR = os.environ.get("EMAIL_MANAGER", "email_do_gestor@exemplo.com")
@@ -56,12 +56,12 @@ def enviar_email(destinatarios_email, assunto, corpo_html):
         print(f"Erro inesperado ao enviar e-mail para {', '.join(destinatarios_email)}: {e}")
         return False
 
-# --- Lógica de Verificação de Datas (MOVIDA DO notification_worker.py) ---
-@scheduler.task('cron', id='check_and_notify_dates', hour=0, minute=0) # Roda à meia-noite (00:00)
+# --- Lógica de Verificação de Datas (agendada) ---
+# Esta função continua agendada para 00:00, mas podemos chamá-la manualmente.
+@scheduler.task('cron', id='check_and_notify_dates', hour=0, minute=0)
 def check_and_notify_dates_job():
-    # Esta função agora precisa de um app_context para acessar o banco de dados via Flask
     with app.app_context():
-        print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando verificação de datas para notificação por e-mail (agendado)...")
+        print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando verificação de datas para notificação por e-mail (agendado/manual)...")
         hoje = datetime.date.today()
         print(f"DEBUG: Data atual (hoje): {hoje.strftime('%d/%m/%Y')}")
 
@@ -74,7 +74,7 @@ def check_and_notify_dates_job():
             for func in funcionarios:
                 print(f"DEBUG: Processando funcionário: ID={func['id']}, Nome={func['nome']}, Admissão={func['data_admissao']}, Aniversário={func['data_aniversario']}, Licença={func['data_retorno_licenca']}")
 
-        delete_licenca_passada() # Esta função deve ser chamada dentro do app_context
+        delete_licenca_passada()
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
         if not destinatarios_gestor:
@@ -87,10 +87,10 @@ def check_and_notify_dates_job():
             data_aniversario_str = func['data_aniversario']
             data_retorno_licenca_str = func['data_retorno_licenca']
 
-            # Notificação de Aniversário
+            # Notificação de Aniversário (lógica de teste: mês atual)
             try:
                 aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
-                if aniversario_data_obj.month == hoje.month: # <-- Lógica de teste "mês atual"
+                if aniversario_data_obj.month == hoje.month:
                     print(f"DEBUG: *** ACIONADO (ANIVERSÁRIO - MÊS ATUAL) PARA {nome} em {aniversario_data_obj.strftime('%d/%m')} ***")
                     assunto = f"Lembrete RH: Aniversário de {nome} neste mês!"
                     corpo = f"""
@@ -108,10 +108,10 @@ def check_and_notify_dates_job():
             except ValueError:
                 print(f"AVISO: Formato de data de aniversário inválido para {nome}: {data_aniversario_str}")
 
-            # Notificação de Admissão
+            # Notificação de Admissão (lógica de teste: mês atual)
             try:
                 admissao_data_obj = datetime.datetime.strptime(data_admissao_str, '%d/%m/%Y').date()
-                if admissao_data_obj.month == hoje.month: # <-- Lógica de teste "mês atual"
+                if admissao_data_obj.month == hoje.month:
                     print(f"DEBUG: *** ACIONADO (ADMISSÃO - MÊS ATUAL) PARA {nome} em {admissao_data_obj.strftime('%d/%m/%Y')} ***")
                     assunto = f"Lembrete RH: Aniversário de Admissão de {nome} neste mês!"
                     corpo = f"""
@@ -128,11 +128,11 @@ def check_and_notify_dates_job():
             except ValueError:
                 print(f"AVISO: Formato de data de admissão inválido para {nome}: {data_admissao_str}")
 
-            # Notificação de Retorno de Licença
+            # Notificação de Retorno de Licença (lógica de teste: mês atual)
             if data_retorno_licenca_str:
                 try:
                     licenca_data_obj = datetime.datetime.strptime(data_retorno_licenca_str, '%d/%m/%Y').date()
-                    if licenca_data_obj.month == hoje.month: # <-- Lógica de teste "mês atual"
+                    if licenca_data_obj.month == hoje.month:
                         print(f"DEBUG: *** ACIONADO (LICENÇA - MÊS ATUAL) PARA {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} ***")
                         assunto = f"Lembrete RH: Retorno de Licença de {nome} neste mês!"
                         corpo = f"""
@@ -149,6 +149,13 @@ def check_and_notify_dates_job():
                 except ValueError:
                     print(f"AVISO: Formato de data de retorno de licença inválido para {nome}: {data_retorno_licenca_str}")
         print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Verificação de datas para e-mail concluída.")
+
+
+# --- Rota temporária para teste manual do job ---
+@app.route('/testar_notificacao_agora', methods=['GET'])
+def trigger_notification_test():
+    check_and_notify_dates_job() # Chama a função do job diretamente
+    return jsonify({"message": "Tarefa de notificação acionada manualmente. Verifique os logs do Railway e sua caixa de e-mail."})
 
 # --- As rotas Flask existentes ---
 @app.route('/')
@@ -230,12 +237,8 @@ def validar_data_formato(data_str):
         return False
 
 # --- Inicialização da Tabela no Início do Aplicativo ---
-# Esta função cria a tabela no banco de dados quando o Flask app inicia.
-# Garante que o banco seja criado no volume.
 with app.app_context():
     create_table()
 
 if __name__ == '__main__':
-    # Remover o `delete_licenca_passada()` daqui se o scheduler já está rodando ele
-    # no `check_and_notify_dates_job`
     app.run(debug=True)
