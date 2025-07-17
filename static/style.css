@@ -39,12 +39,12 @@ h1, h2 {
 }
 
 .form-group input[type="text"],
-.form-group input[type="email"] { /* Adicionado input[type="email"] se tiver */
+.form-group input[type="email"] {
     width: calc(100% - 20px);
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Inclui padding e borda na largura total */
+    box-sizing: border-box;
 }
 
 button[type="submit"], .editar-btn, .deletar-btn {
@@ -135,28 +135,6 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* --- NOVO: Estilo para o grupo de seções de cliente --- */
-.client-section-group {
-    margin-top: 50px; /* Grande margem superior para separar das seções de funcionário */
-    padding: 20px; /* Padding interno para a "caixa" */
-    border: 2px solid #007bff; /* Borda visível, cor primária */
-    border-radius: 8px; /* Cantos arredondados */
-    background-color: #e6f2ff; /* Um fundo mais claro para distinguir */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Sombra para dar profundidade */
-}
-
-.client-section-group .section {
-    border: none; /* Remove a borda interna dos divs .section dentro do grupo */
-    background-color: transparent; /* Remove o fundo interno */
-    padding: 0; /* Remove padding interno para não duplicar */
-    margin-bottom: 20px; /* Ajusta margem entre os h2 */
-}
-
-.client-section-group .section:last-child {
-    margin-bottom: 0; /* Remove margem do último section no grupo */
-}
-
-
 /* --- Estilos do Modal --- */
 .modal {
     display: none;
@@ -199,4 +177,26 @@ table tr:hover {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* --- Ajustes para o grupo de seções de cliente --- */
+.client-section-group {
+    margin-top: 100px; /* Margem superior de 100px para separar */
+    padding: 0; /* Remove padding que o .section já tem */
+    border: none; /* Remove borda extra */
+    background-color: transparent; /* Remove fundo azul */
+    box-shadow: none; /* Remove sombra extra */
+    /* Garante que os .section internos mantenham seus estilos individuais */
+}
+
+/* Seções internas dentro de client-section-group voltam a ter seu estilo padrão */
+.client-section-group .section {
+    border: 1px solid #ddd; /* Mantém a borda padrão de .section */
+    background-color: #f9f9f9; /* Mantém o fundo padrão de .section */
+    padding: 20px; /* Mantém o padding padrão de .section */
+    margin-bottom: 30px; /* Mantém a margem padrão entre seções */
+}
+/* A última seção dentro do grupo não precisa de margin-bottom extra */
+.client-section-group .section:last-child {
+    margin-bottom: 0;
 }
