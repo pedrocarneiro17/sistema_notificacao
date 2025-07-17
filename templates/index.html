@@ -12,7 +12,7 @@
 
         <div class="section">
             <h2>Registrar Nova Pessoa (Funcionário)</h2>
-            <form id="registroFuncionarioForm"> {# ID DO FORMULARIO MUDOU #}
+            <form id="registroFuncionarioForm">
                 <div class="form-group">
                     <label for="nome">Nome:</label>
                     <input type="text" id="nome" name="nome" required>
@@ -31,12 +31,12 @@
                 </div>
                 <button type="submit">Salvar Funcionário</button>
             </form>
-            <div id="mensagemFuncionario" class="message"></div> {# ID DA MENSAGEM MUDOU #}
+            <div id="mensagemFuncionario" class="message"></div>
         </div>
 
         <div class="section">
             <h2>Pessoas Registradas (Funcionários)</h2>
-            <table id="funcionariosTable"> {# ID DA TABELA MUDOU #}
+            <table id="funcionariosTable">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -54,8 +54,8 @@
                         <td>{{ funcionario.data_aniversario }}</td>
                         <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
                         <td>
-                            <button class="editar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Editar</button> {# data-type Adicionado #}
-                            <button class="deletar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Excluir</button> {# data-type Adicionado #}
+                            <button class="editar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Editar</button>
+                            <button class="deletar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Excluir</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -63,9 +63,14 @@
             </table>
         </div>
 
+        {# --- INÍCIO DA QUEBRA VISUAL --- #}
+        <hr style="margin: 40px 0; border: 0; border-top: 1px dashed #bbb;"> {# <--- LINHA ADICIONADA AQUI #}
+        {# Você pode ajustar o estilo do HR, ex: border-top: 1px solid #ccc; ou margin: 30px 0; #}
+        {# --- FIM DA QUEBRA VISUAL --- #}
+
         <div class="section">
             <h2>Registrar Novo Cliente</h2>
-            <form id="registroClienteForm"> {# NOVO FORMULARIO #}
+            <form id="registroClienteForm">
                 <div class="form-group">
                     <label for="nome_cliente">Nome do Cliente:</label>
                     <input type="text" id="nome_cliente" name="nome_cliente" required>
@@ -76,12 +81,12 @@
                 </div>
                 <button type="submit">Salvar Cliente</button>
             </form>
-            <div id="mensagemCliente" class="message"></div> {# NOVO ID PARA MENSAGEM #}
+            <div id="mensagemCliente" class="message"></div>
         </div>
 
         <div class="section">
             <h2>Clientes Registrados</h2>
-            <table id="clientesTable"> {# NOVA TABELA #}
+            <table id="clientesTable">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -95,8 +100,8 @@
                         <td>{{ cliente.nome }}</td>
                         <td>{{ cliente.data_aniversario }}</td>
                         <td>
-                            <button class="editar-btn" data-id="{{ cliente.id }}" data-type="cliente">Editar</button> {# data-type Adicionado #}
-                            <button class="deletar-btn" data-id="{{ cliente.id }}" data-type="cliente">Excluir</button> {# data-type Adicionado #}
+                            <button class="editar-btn" data-id="{{ cliente.id }}" data-type="cliente">Editar</button>
+                            <button class="deletar-btn" data-id="{{ cliente.id }}" data-type="cliente">Excluir</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -106,41 +111,41 @@
 
     </div>
 
-    {# --- Modal de Edição de Funcionário (existente, renomeado) --- #}
-    <div id="editFuncionarioModal" class="modal"> {# ID DO MODAL MUDOU #}
+    {# --- Modal de Edição de Funcionário (existente) --- #}
+    <div id="editFuncionarioModal" class="modal">
         <div class="modal-content">
-            <span class="close-button funcionario">&times;</span> {# CLASSE PARA FECHAR #}
+            <span class="close-button funcionario">&times;</span>
             <h2>Editar Funcionário</h2>
-            <form id="editFuncionarioForm"> {# ID DO FORM MUDOU #}
-                <input type="hidden" id="id_editar_funcionario" name="id_editar"> {# ID DO INPUT MUDOU #}
+            <form id="editFuncionarioForm">
+                <input type="hidden" id="id_editar_funcionario" name="id_editar">
                 <div class="form-group">
-                    <label for="nome_editar_funcionario">Nome:</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <label for="nome_editar_funcionario">Nome:</label>
                     <input type="text" id="nome_editar_funcionario" name="nome_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_admissao_editar_funcionario">Data Admissão (DD/MM/AAAA):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <label for="data_admissao_editar_funcionario">Data Admissão (DD/MM/AAAA):</label>
                     <input type="text" id="data_admissao_editar_funcionario" name="data_admissao_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_aniversario_editar_funcionario">Data Aniversário (DD/MM/AAAA):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <label for="data_aniversario_editar_funcionario">Data Aniversário (DD/MM/AAAA):</label>
                     <input type="text" id="data_aniversario_editar_funcionario" name="data_aniversario_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_retorno_licenca_editar_funcionario">Retorno Licença (DD/MM/AAAA - Opcional):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <label for="data_retorno_licenca_editar_funcionario">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca_editar_funcionario" name="data_retorno_licenca_editar">
                 </div>
                 <button type="submit">Salvar Edição do Funcionário</button>
             </form>
-            <div id="mensagemEditarFuncionario" class="message"></div> {# ID DA MENSAGEM MUDOU #}
+            <div id="mensagemEditarFuncionario" class="message"></div>
         </div>
     </div>
 
-    {# --- NOVO: Modal de Edição de Cliente --- #}
-    <div id="editClienteModal" class="modal"> {# NOVO MODAL #}
+    {# --- Modal de Edição de Cliente (novo) --- #}
+    <div id="editClienteModal" class="modal">
         <div class="modal-content">
-            <span class="close-button cliente">&times;</span> {# CLASSE PARA FECHAR #}
+            <span class="close-button cliente">&times;</span>
             <h2>Editar Cliente</h2>
-            <form id="editClienteForm"> {# NOVO FORMULARIO #}
+            <form id="editClienteForm">
                 <input type="hidden" id="id_editar_cliente" name="id_editar_cliente">
                 <div class="form-group">
                     <label for="nome_editar_cliente">Nome do Cliente:</label>
@@ -152,7 +157,7 @@
                 </div>
                 <button type="submit">Salvar Edição do Cliente</button>
             </form>
-            <div id="mensagemEditarCliente" class="message"></div> {# NOVO ID PARA MENSAGEM #}
+            <div id="mensagemEditarCliente" class="message"></div>
         </div>
     </div>
 
