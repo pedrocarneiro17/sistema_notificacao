@@ -135,7 +135,7 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* --- Estilos do Modal --- */
+/* --- Estilos do Modal (sem alteração) --- */
 .modal {
     display: none;
     position: fixed;
@@ -179,24 +179,8 @@ table tr:hover {
     cursor: pointer;
 }
 
-/* --- Ajustes para o grupo de seções de cliente --- */
-.client-section-group {
-    margin-top: 100px; /* Margem superior de 100px para separar */
-    padding: 0; /* Remove padding que o .section já tem */
-    border: none; /* Remove borda extra */
-    background-color: transparent; /* Remove fundo azul */
-    box-shadow: none; /* Remove sombra extra */
-    /* Garante que os .section internos mantenham seus estilos individuais */
-}
-
-/* Seções internas dentro de client-section-group voltam a ter seu estilo padrão */
-.client-section-group .section {
-    border: 1px solid #ddd; /* Mantém a borda padrão de .section */
-    background-color: #f9f9f9; /* Mantém o fundo padrão de .section */
-    padding: 20px; /* Mantém o padding padrão de .section */
-    margin-bottom: 30px; /* Mantém a margem padrão entre seções */
-}
-/* A última seção dentro do grupo não precisa de margin-bottom extra */
-.client-section-group .section:last-child {
-    margin-bottom: 0;
+/* --- Ajuste FINAL para o espaçamento entre as seções --- */
+/* Apenas a seção de registro de cliente terá uma grande margem superior */
+#registroClienteSection {
+    margin-top: 100px; /* Grande margem superior de 100px para separar */
 }
