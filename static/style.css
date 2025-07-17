@@ -38,7 +38,8 @@ h1, h2 {
     font-weight: bold;
 }
 
-.form-group input[type="text"] {
+.form-group input[type="text"],
+.form-group input[type="email"] { /* Adicionado input[type="email"] se tiver */
     width: calc(100% - 20px);
     padding: 10px;
     border: 1px solid #ccc;
@@ -46,22 +47,22 @@ h1, h2 {
     box-sizing: border-box; /* Inclui padding e borda na largura total */
 }
 
-button[type="submit"], .editar-btn, .deletar-btn { /* Adicionado .deletar-btn */
+button[type="submit"], .editar-btn, .deletar-btn {
     color: white;
     padding: 10px 15px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    width: 100%; /* Botões de formulário */
-    margin-top: 5px; /* Pequeno espaçamento */
+    width: 100%;
+    margin-top: 5px;
 }
-/* Estilo específico para os botões de ação na tabela */
+
 .editar-btn, .deletar-btn {
-    width: auto; /* Para não ocupar 100% na célula da tabela */
+    width: auto;
     padding: 5px 10px;
     font-size: 14px;
-    margin-right: 5px; /* Espaçamento entre os botões */
+    margin-right: 5px;
 }
 
 button[type="submit"] {
@@ -73,7 +74,7 @@ button[type="submit"]:hover {
 }
 
 .editar-btn {
-    background-color: #ffc107; /* Amarelo para editar */
+    background-color: #ffc107;
     color: #333;
 }
 
@@ -81,14 +82,13 @@ button[type="submit"]:hover {
     background-color: #e0a800;
 }
 
-.deletar-btn { /* Novo estilo para o botão de exclusão */
-    background-color: #dc3545; /* Vermelho para deletar */
+.deletar-btn {
+    background-color: #dc3545;
 }
 
 .deletar-btn:hover {
     background-color: #c82333;
 }
-
 
 .message {
     margin-top: 15px;
@@ -135,9 +135,31 @@ table tr:hover {
     background-color: #ddd;
 }
 
+/* --- NOVO: Estilo para o grupo de seções de cliente --- */
+.client-section-group {
+    margin-top: 50px; /* Grande margem superior para separar das seções de funcionário */
+    padding: 20px; /* Padding interno para a "caixa" */
+    border: 2px solid #007bff; /* Borda visível, cor primária */
+    border-radius: 8px; /* Cantos arredondados */
+    background-color: #e6f2ff; /* Um fundo mais claro para distinguir */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Sombra para dar profundidade */
+}
+
+.client-section-group .section {
+    border: none; /* Remove a borda interna dos divs .section dentro do grupo */
+    background-color: transparent; /* Remove o fundo interno */
+    padding: 0; /* Remove padding interno para não duplicar */
+    margin-bottom: 20px; /* Ajusta margem entre os h2 */
+}
+
+.client-section-group .section:last-child {
+    margin-bottom: 0; /* Remove margem do último section no grupo */
+}
+
+
 /* --- Estilos do Modal --- */
 .modal {
-    display: none; /* <-- DEVE SER APENAS 'none' AQUI */
+    display: none;
     position: fixed;
     z-index: 1;
     left: 0;
@@ -146,7 +168,6 @@ table tr:hover {
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
-    /* REMOVA "display: flex;" DAQUI */
     align-items: center;
     justify-content: center;
 }
