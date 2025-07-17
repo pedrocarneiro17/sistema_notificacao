@@ -9,7 +9,7 @@ body {
 .container {
     max-width: 900px;
     margin: 0 auto;
-    background-color: #fff;
+    background-color: #fff; /* Fundo branco da caixa GRANDE principal */
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -20,18 +20,12 @@ h1, h2 {
     text-align: center;
 }
 
-/* Estilo para as seções individuais (formulários e tabelas) */
 .section {
-    margin-bottom: 30px;
+    margin-bottom: 30px; /* Espaço entre as caixas .section */
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    background-color: #f9f9f9; /* Fundo levemente cinza para seções internas */
-}
-
-/* Remova a margem inferior da última seção dentro de um grupo para evitar espaço extra */
-.content-group .section:last-child {
-    margin-bottom: 0;
+    background-color: #f9f9f9; /* Fundo levemente cinza das caixas MENORES */
 }
 
 .form-group {
@@ -141,21 +135,7 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* --- NOVOS ESTILOS PARA OS GRUPOS DE CONTEÚDO --- */
-.content-group {
-    background-color: #fff; /* Fundo branco para a grande caixa */
-    padding: 20px; /* Padding interno para a grande caixa */
-    border-radius: 8px; /* Cantos arredondados */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra para dar profundidade */
-    margin-bottom: 30px; /* Espaço entre os grupos (se houver mais de um) */
-}
-
-.client-group {
-    margin-top: 100px; /* Grande margem superior para separar do grupo de funcionários */
-}
-
-
-/* --- Estilos do Modal (sem alteração) --- */
+/* --- Estilos do Modal --- */
 .modal {
     display: none;
     position: fixed;
@@ -197,4 +177,11 @@ table tr:hover {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* --- AJUSTE FINAL PARA O ESPAÇAMENTO DESEJADO --- */
+/* Remove os estilos que criavam "caixas brancas" em excesso */
+/* Apenas a primeira seção de clientes terá uma grande margem superior */
+#registroClienteSection {
+    margin-top: 100px; /* Grande margem superior de 100px */
 }
