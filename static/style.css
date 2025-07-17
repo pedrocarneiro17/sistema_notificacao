@@ -9,7 +9,7 @@ body {
 .container {
     max-width: 900px;
     margin: 0 auto;
-    background-color: #fff; /* Fundo branco da caixa GRANDE principal */
+    background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -21,11 +21,11 @@ h1, h2 {
 }
 
 .section {
-    margin-bottom: 30px; /* Espaço entre as caixas .section */
+    margin-bottom: 30px;
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    background-color: #f9f9f9; /* Fundo levemente cinza das caixas MENORES */
+    background-color: #f9f9f9;
 }
 
 .form-group {
@@ -135,7 +135,7 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* --- Estilos do Modal --- */
+/* --- Estilos do Modal (sem alteração) --- */
 .modal {
     display: none;
     position: fixed;
@@ -179,9 +179,8 @@ table tr:hover {
     cursor: pointer;
 }
 
-/* --- AJUSTE FINAL PARA O ESPAÇAMENTO DESEJADO --- */
-/* Remove os estilos que criavam "caixas brancas" em excesso */
-/* Apenas a primeira seção de clientes terá uma grande margem superior */
+/* --- Ajuste FINAL para o espaçamento entre as seções --- */
+/* Apenas a seção de registro de cliente terá uma grande margem superior */
 #registroClienteSection {
-    margin-top: 100px; /* Grande margem superior de 100px */
+    margin-top: 100px; /* Grande margem superior de 100px para separar */
 }
