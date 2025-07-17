@@ -9,15 +9,38 @@ body {
 .container {
     max-width: 900px;
     margin: 0 auto;
+}
+
+h1 {
+    color: #0056b3;
+    text-align: center;
+    margin-bottom: 30px;
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-h1, h2 {
+h2 {
     color: #0056b3;
     text-align: center;
+}
+
+/* Grupos de conteúdo separados */
+.content-group {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.employee-group {
+    border-left: 4px solid #007bff;
+}
+
+.client-group {
+    border-left: 4px solid #28a745;
 }
 
 .section {
@@ -71,6 +94,15 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     background-color: #0056b3;
+}
+
+/* Botão específico para clientes */
+.client-group button[type="submit"] {
+    background-color: #28a745;
+}
+
+.client-group button[type="submit"]:hover {
+    background-color: #218838;
 }
 
 .editar-btn {
@@ -135,7 +167,7 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* --- Estilos do Modal (sem alteração) --- */
+/* Estilos do Modal */
 .modal {
     display: none;
     position: fixed;
@@ -179,8 +211,11 @@ table tr:hover {
     cursor: pointer;
 }
 
-/* --- Ajuste FINAL para o espaçamento entre as seções --- */
-/* Apenas a seção de registro de cliente terá uma grande margem superior */
-#registroClienteSection {
-    margin-top: 100px; /* Grande margem superior de 100px para separar */
+/* Estilo para títulos de seção específicos */
+.employee-group h2 {
+    color: #007bff;
+}
+
+.client-group h2 {
+    color: #28a745;
 }
