@@ -11,8 +11,8 @@
         <h1>Gerenciador de Datas Importantes</h1>
 
         <div class="section">
-            <h2>Registrar Nova Pessoa</h2>
-            <form id="registroForm">
+            <h2>Registrar Nova Pessoa (Funcionário)</h2>
+            <form id="registroFuncionarioForm"> {# ID DO FORMULARIO MUDOU #}
                 <div class="form-group">
                     <label for="nome">Nome:</label>
                     <input type="text" id="nome" name="nome" required>
@@ -29,17 +29,16 @@
                     <label for="data_retorno_licenca">Retorno Licença (DD/MM/AAAA - Opcional):</label>
                     <input type="text" id="data_retorno_licenca" name="data_retorno_licenca" placeholder="Ex: 10/03/2025">
                 </div>
-                <button type="submit">Salvar Pessoa</button>
+                <button type="submit">Salvar Funcionário</button>
             </form>
-            <div id="mensagem" class="message"></div>
+            <div id="mensagemFuncionario" class="message"></div> {# ID DA MENSAGEM MUDOU #}
         </div>
 
         <div class="section">
-            <h2>Pessoas Registradas</h2>
-            <table id="pessoasTable">
+            <h2>Pessoas Registradas (Funcionários)</h2>
+            <table id="funcionariosTable"> {# ID DA TABELA MUDOU #}
                 <thead>
                     <tr>
-                        {# REMOVIDO: <th>ID</th> #}
                         <th>Nome</th>
                         <th>Admissão</th>
                         <th>Aniversário</th>
@@ -48,51 +47,112 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {# Loop para exibir os funcionários passados pelo Flask #}
                     {% for funcionario in funcionarios %}
                     <tr>
-                        {# REMOVIDO: <td>{{ funcionario.id }}</td> #}
                         <td>{{ funcionario.nome }}</td>
                         <td>{{ funcionario.data_admissao }}</td>
                         <td>{{ funcionario.data_aniversario }}</td>
                         <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
                         <td>
-                            <button class="editar-btn" data-id="{{ funcionario.id }}">Editar</button>
-                            <button class="deletar-btn" data-id="{{ funcionario.id }}">Excluir</button>
+                            <button class="editar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Editar</button> {# data-type Adicionado #}
+                            <button class="deletar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Excluir</button> {# data-type Adicionado #}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <div class="section">
+            <h2>Registrar Novo Cliente</h2>
+            <form id="registroClienteForm"> {# NOVO FORMULARIO #}
+                <div class="form-group">
+                    <label for="nome_cliente">Nome do Cliente:</label>
+                    <input type="text" id="nome_cliente" name="nome_cliente" required>
+                </div>
+                <div class="form-group">
+                    <label for="data_aniversario_cliente">Data Aniversário (DD/MM/AAAA):</label>
+                    <input type="text" id="data_aniversario_cliente" name="data_aniversario_cliente" placeholder="Ex: 20/11/1985" required>
+                </div>
+                <button type="submit">Salvar Cliente</button>
+            </form>
+            <div id="mensagemCliente" class="message"></div> {# NOVO ID PARA MENSAGEM #}
+        </div>
+
+        <div class="section">
+            <h2>Clientes Registrados</h2>
+            <table id="clientesTable"> {# NOVA TABELA #}
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Aniversário</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.nome }}</td>
+                        <td>{{ cliente.data_aniversario }}</td>
+                        <td>
+                            <button class="editar-btn" data-id="{{ cliente.id }}" data-type="cliente">Editar</button> {# data-type Adicionado #}
+                            <button class="deletar-btn" data-id="{{ cliente.id }}" data-type="cliente">Excluir</button> {# data-type Adicionado #}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
     </div>
 
-    {# --- Modal de Edição --- #}
-    <div id="editModal" class="modal">
+    {# --- Modal de Edição de Funcionário (existente, renomeado) --- #}
+    <div id="editFuncionarioModal" class="modal"> {# ID DO MODAL MUDOU #}
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Editar Pessoa</h2>
-            <form id="editForm">
-                <input type="hidden" id="id_editar" name="id_editar"> {# ID ainda é necessário, mas está oculto #}
+            <span class="close-button funcionario">&times;</span> {# CLASSE PARA FECHAR #}
+            <h2>Editar Funcionário</h2>
+            <form id="editFuncionarioForm"> {# ID DO FORM MUDOU #}
+                <input type="hidden" id="id_editar_funcionario" name="id_editar"> {# ID DO INPUT MUDOU #}
                 <div class="form-group">
-                    <label for="nome_editar">Nome:</label>
-                    <input type="text" id="nome_editar" name="nome_editar" required>
+                    <label for="nome_editar_funcionario">Nome:</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <input type="text" id="nome_editar_funcionario" name="nome_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_admissao_editar">Data Admissão (DD/MM/AAAA):</label>
-                    <input type="text" id="data_admissao_editar" name="data_admissao_editar" required>
+                    <label for="data_admissao_editar_funcionario">Data Admissão (DD/MM/AAAA):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <input type="text" id="data_admissao_editar_funcionario" name="data_admissao_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_aniversario_editar">Data Aniversário (DD/MM/AAAA):</label>
-                    <input type="text" id="data_aniversario_editar" name="data_aniversario_editar" required>
+                    <label for="data_aniversario_editar_funcionario">Data Aniversário (DD/MM/AAAA):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <input type="text" id="data_aniversario_editar_funcionario" name="data_aniversario_editar" required>
                 </div>
                 <div class="form-group">
-                    <label for="data_retorno_licenca_editar">Retorno Licença (DD/MM/AAAA - Opcional):</label>
-                    <input type="text" id="data_retorno_licenca_editar" name="data_retorno_licenca_editar">
+                    <label for="data_retorno_licenca_editar_funcionario">Retorno Licença (DD/MM/AAAA - Opcional):</label> {# ID DO LABEL E INPUT MUDOU #}
+                    <input type="text" id="data_retorno_licenca_editar_funcionario" name="data_retorno_licenca_editar">
                 </div>
-                <button type="submit">Salvar Edição</button>
+                <button type="submit">Salvar Edição do Funcionário</button>
             </form>
-            <div id="mensagem_editar" class="message"></div>
+            <div id="mensagemEditarFuncionario" class="message"></div> {# ID DA MENSAGEM MUDOU #}
+        </div>
+    </div>
+
+    {# --- NOVO: Modal de Edição de Cliente --- #}
+    <div id="editClienteModal" class="modal"> {# NOVO MODAL #}
+        <div class="modal-content">
+            <span class="close-button cliente">&times;</span> {# CLASSE PARA FECHAR #}
+            <h2>Editar Cliente</h2>
+            <form id="editClienteForm"> {# NOVO FORMULARIO #}
+                <input type="hidden" id="id_editar_cliente" name="id_editar_cliente">
+                <div class="form-group">
+                    <label for="nome_editar_cliente">Nome do Cliente:</label>
+                    <input type="text" id="nome_editar_cliente" name="nome_editar_cliente" required>
+                </div>
+                <div class="form-group">
+                    <label for="data_aniversario_editar_cliente">Data Aniversário (DD/MM/AAAA):</label>
+                    <input type="text" id="data_aniversario_editar_cliente" name="data_aniversario_editar_cliente" required>
+                </div>
+                <button type="submit">Salvar Edição do Cliente</button>
+            </form>
+            <div id="mensagemEditarCliente" class="message"></div> {# NOVO ID PARA MENSAGEM #}
         </div>
     </div>
 

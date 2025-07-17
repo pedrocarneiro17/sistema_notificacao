@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask, render_template, request, jsonify
-from database import insert_funcionario, get_all_funcionarios, create_table, get_funcionario_by_id, update_funcionario, delete_funcionario, delete_licenca_passada
+# NOVO: Importa as novas funções de cliente
+from database import insert_funcionario, get_all_funcionarios, create_table, get_funcionario_by_id, update_funcionario, delete_funcionario, delete_licenca_passada, insert_cliente, get_all_clientes, get_cliente_by_id, update_cliente, delete_cliente
 import datetime
 from flask_apscheduler import APScheduler
 
@@ -9,10 +10,6 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
-# REMOVIDO: import locale # Não precisamos mais do módulo locale
-
-# REMOVIDO: O bloco try-except para locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 
 # NOVO: Dicionário para mapear números dos meses para nomes em português
 MESES_EM_PORTUGUES = {
@@ -77,6 +74,7 @@ def check_daily_notifications_job():
         print(f"DEBUG_DIARIO: Data atual (hoje): {hoje.strftime('%d/%m/%Y')}")
 
         funcionarios = get_all_funcionarios()
+        clientes = get_all_clientes() # NOVO: Obtém todos os clientes
         delete_licenca_passada()
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
@@ -86,15 +84,16 @@ def check_daily_notifications_job():
 
         eventos_para_notificar = {}
 
+        # --- Processa Funcionários ---
         for func in funcionarios:
             nome = func['nome']
             data_admissao_str = func['data_admissao']
             data_aniversario_str = func['data_aniversario']
             data_retorno_licenca_str = func['data_retorno_licenca']
 
-            print(f"DEBUG_DIARIO: Processando {nome}. Admissão: {data_admissao_str}, Aniversário: {data_aniversario_str}, Licença: {data_retorno_licenca_str}")
+            print(f"DEBUG_DIARIO: Processando FUNCIONÁRIO {nome}. Admissão: {data_admissao_str}, Aniversário: {data_aniversario_str}, Licença: {data_retorno_licenca_str}")
 
-            # --- Notificação de Aniversário (15 ou 10 dias antes) ---
+            # Notificação de Aniversário (15 ou 10 dias antes)
             try:
                 aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
                 aniversario_este_ano = aniversario_data_obj.replace(year=hoje.year)
@@ -103,16 +102,16 @@ def check_daily_notifications_job():
                 dias_para_aniversario = (aniversario_este_ano - hoje).days
 
                 if dias_para_aniversario in [15, 10]:
-                    chave = (aniversario_este_ano, f"aniversário ({dias_para_aniversario} dias)")
+                    chave = (aniversario_este_ano, f"aniversário de funcionário ({dias_para_aniversario} dias)")
                     if chave not in eventos_para_notificar:
                         eventos_para_notificar[chave] = []
                     eventos_para_notificar[chave].append(nome)
-                    print(f"DEBUG_DIARIO: Aniversário de {nome} (em {dias_para_aniversario} dias) adicionado para consolidação.")
+                    print(f"DEBUG_DIARIO: Aniversário de funcionário {nome} (em {dias_para_aniversario} dias) adicionado para consolidação.")
             except ValueError:
-                print(f"AVISO_DIARIO: Formato de data de aniversário inválido para {nome}: {data_aniversario_str}")
+                print(f"AVISO_DIARIO: Formato de data de aniversário de funcionário inválido para {nome}: {data_aniversario_str}")
 
 
-            # --- Notificação de Admissão (15 ou 10 dias antes) ---
+            # Notificação de Admissão (15 ou 10 dias antes)
             try:
                 admissao_data_obj = datetime.datetime.strptime(data_admissao_str, '%d/%m/%Y').date()
                 admissao_este_ano = admissao_data_obj.replace(year=hoje.year)
@@ -121,47 +120,72 @@ def check_daily_notifications_job():
                 dias_para_admissao = (admissao_este_ano - hoje).days
 
                 if dias_para_admissao in [15, 10]:
-                    chave = (admissao_este_ano, f"admissão ({dias_para_admissao} dias)")
+                    chave = (admissao_este_ano, f"admissão de funcionário ({dias_para_admissao} dias)")
                     if chave not in eventos_para_notificar:
                         eventos_para_notificar[chave] = []
                     eventos_para_notificar[chave].append(nome)
-                    print(f"DEBUG_DIARIO: Admissão de {nome} (em {dias_para_admissao} dias) adicionado para consolidação.")
+                    print(f"DEBUG_DIARIO: Admissão de funcionário {nome} (em {dias_para_admissao} dias) adicionado para consolidação.")
             except ValueError:
-                print(f"AVISO_DIARIO: Formato de data de admissão inválido para {nome}: {data_admissao_str}")
+                print(f"AVISO_DIARIO: Formato de data de admissão de funcionário inválido para {nome}: {data_admissao_str}")
 
-            # --- Notificação de Retorno de Licença (15 ou 10 dias antes) ---
+            # Notificação de Retorno de Licença (15 ou 10 dias antes)
             if data_retorno_licenca_str:
                 try:
                     licenca_data_obj = datetime.datetime.strptime(data_retorno_licenca_str, '%d/%m/%Y').date()
                     dias_para_licenca = (licenca_data_obj - hoje).days
 
                     if dias_para_licenca in [15, 10]:
-                        chave = (licenca_data_obj, f"retorno de licença ({dias_para_licenca} dias)")
+                        chave = (licenca_data_obj, f"retorno de licença de funcionário ({dias_para_licenca} dias)")
                         if chave not in eventos_para_notificar:
                             eventos_para_notificar[chave] = []
                         eventos_para_notificar[chave].append(nome)
-                        print(f"DEBUG_DIARIO: Retorno de licença de {nome} (em {dias_para_licenca} dias) adicionado para consolidação.")
+                        print(f"DEBUG_DIARIO: Retorno de licença de funcionário {nome} (em {dias_para_licenca} dias) adicionado para consolidação.")
                 except ValueError:
-                    print(f"AVISO_DIARIO: Formato de data de retorno de licença inválido para {nome}: {data_retorno_licenca_str}")
+                    print(f"AVISO_DIARIO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
+
+        # --- NOVO: Processa Clientes ---
+        for cliente in clientes:
+            nome = cliente['nome']
+            data_aniversario_str = cliente['data_aniversario']
+
+            print(f"DEBUG_DIARIO: Processando CLIENTE {nome}. Aniversário: {data_aniversario_str}")
+
+            # Notificação de Aniversário de Cliente (15 ou 10 dias antes)
+            try:
+                aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
+                aniversario_este_ano = aniversario_data_obj.replace(year=hoje.year)
+                if aniversario_este_ano < hoje:
+                    aniversario_este_ano = aniversario_data_obj.replace(year=hoje.year + 1)
+                dias_para_aniversario = (aniversario_este_ano - hoje).days
+
+                if dias_para_aniversario in [15, 10]:
+                    chave = (aniversario_este_ano, f"aniversário de cliente ({dias_para_aniversario} dias)")
+                    if chave not in eventos_para_notificar:
+                        eventos_para_notificar[chave] = []
+                    eventos_para_notificar[chave].append(nome)
+                    print(f"DEBUG_DIARIO: Aniversário de cliente {nome} (em {dias_para_aniversario} dias) adicionado para consolidação.")
+            except ValueError:
+                print(f"AVISO_DIARIO: Formato de data de aniversário de cliente inválido para {nome}: {data_aniversario_str}")
+
 
         # --- Enviar E-mails Consolidados para Notificações Diárias ---
         if not eventos_para_notificar:
             print("DEBUG_DIARIO: Nenhuma data para notificação diária encontrada.")
         else:
-            for (data_evento, tipo_evento_notificacao), nomes_funcionarios in eventos_para_notificar.items():
-                lista_nomes = ", ".join(nomes_funcionarios)
+            for (data_evento, tipo_evento_notificacao), nomes_envolvidos in eventos_para_notificar.items():
+                lista_nomes = ", ".join(nomes_envolvidos)
                 # Ajusta para mais de um 'e' se houver mais de 2 nomes no assunto
-                if len(nomes_funcionarios) > 1:
-                   assunto_nomes = f"{', '.join(nomes_funcionarios[:-1])} e {nomes_funcionarios[-1]}"
+                if len(nomes_envolvidos) > 1:
+                   assunto_nomes = f"{', '.join(nomes_envolvidos[:-1])} e {nomes_envolvidos[-1]}"
                 else:
-                   assunto_nomes = nomes_funcionarios[0]
+                   assunto_nomes = nomes_envolvidos[0]
 
                 assunto = f"Lembrete RH: {tipo_evento_notificacao.capitalize()} de {assunto_nomes}"
 
                 corpo = f"""
                 <html>
                 <body>
-                    <p>Olá Gestores,</p>
+                    <p>Olá Gestor(a)s,</p>
                     <p>Um(a) ou mais evento(s) importante(s) se aproxima(m):</p>
                     <ul>
                         <li>Faltam <b>{tipo_evento_notificacao.split('(')[1].replace(')', '')}</b> para o(s) {tipo_evento_notificacao.split('(')[0].strip()} de: <b>{lista_nomes}</b></li>
@@ -191,13 +215,14 @@ def send_monthly_summary_job():
         mes_analise_num = mes_analise_data.month
         ano_analise_num = mes_analise_data.year
 
-        # NOVO: Obtém o nome do mês em português do dicionário
+        # Obtém o nome do mês em português do dicionário
         nome_do_mes_pt = MESES_EM_PORTUGUES.get(mes_analise_num, f"Mês {mes_analise_num}")
 
 
         print(f"DEBUG_MENSAL: Mês/Ano de análise para resumo: {nome_do_mes_pt.capitalize()}/{ano_analise_num}")
 
         funcionarios = get_all_funcionarios()
+        clientes = get_all_clientes() # NOVO: Obtém todos os clientes
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
         if not destinatarios_gestor:
@@ -206,47 +231,66 @@ def send_monthly_summary_job():
 
         resumo_mensal_eventos = {} # Chave: datetime.date, Valor: lista de descrições de eventos
 
+        # --- Processa Funcionários para o Resumo Mensal ---
         for func in funcionarios:
             nome = func['nome']
             data_admissao_str = func['data_admissao']
             data_aniversario_str = func['data_aniversario']
             data_retorno_licenca_str = func['data_retorno_licenca']
 
-            # --- Aniversários do Mês ---
+            # Aniversários do Mês
             try:
                 aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
                 if aniversario_data_obj.month == mes_analise_num:
                     data_completa_evento = aniversario_data_obj.replace(year=ano_analise_num)
                     if data_completa_evento not in resumo_mensal_eventos:
                         resumo_mensal_eventos[data_completa_evento] = []
-                    resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de {nome}")
-                    print(f"DEBUG_MENSAL: Aniversário de {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
+                    resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Funcionário: {nome}")
+                    print(f"DEBUG_MENSAL: Aniversário de funcionário {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
             except ValueError:
-                print(f"AVISO_MENSAL: Formato de data de aniversário inválido para {nome}: {data_aniversario_str}")
+                print(f"AVISO_MENSAL: Formato de data de aniversário de funcionário inválido para {nome}: {data_aniversario_str}")
 
-            # --- Admissões do Mês ---
+            # Admissões do Mês
             try:
                 admissao_data_obj = datetime.datetime.strptime(data_admissao_str, '%d/%m/%Y').date()
                 if admissao_data_obj.month == mes_analise_num:
                     data_completa_evento = admissao_data_obj.replace(year=ano_analise_num)
                     if data_completa_evento not in resumo_mensal_eventos:
                         resumo_mensal_eventos[data_completa_evento] = []
-                    resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Admissão de {nome}")
-                    print(f"DEBUG_MENSAL: Admissão de {nome} em {data_completa_evento.strftime('%d/%m/%Y')} adicionada ao resumo mensal.")
+                    resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Admissão de Funcionário: {nome}")
+                    print(f"DEBUG_MENSAL: Admissão de funcionário {nome} em {data_completa_evento.strftime('%d/%m/%Y')} adicionada ao resumo mensal.")
             except ValueError:
-                print(f"AVISO_MENSAL: Formato de data de admissão inválido para {nome}: {data_admissao_str}")
+                print(f"AVISO_MENSAL: Formato de data de admissão de funcionário inválido para {nome}: {data_admissao_str}")
 
-            # --- Retorno de Licença do Mês (se existir) ---
+            # Retorno de Licença do Mês (se existir)
             if data_retorno_licenca_str:
                 try:
                     licenca_data_obj = datetime.datetime.strptime(data_retorno_licenca_str, '%d/%m/%Y').date()
                     if licenca_data_obj.month == mes_analise_num and licenca_data_obj.year == ano_analise_num:
                         if licenca_data_obj not in resumo_mensal_eventos:
                             resumo_mensal_eventos[licenca_data_obj] = []
-                        resumo_mensal_eventos[licenca_data_obj].append(f"Retorno de Licença de {nome}")
-                        print(f"DEBUG_MENSAL: Retorno de licença de {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} adicionado ao resumo mensal.")
+                        resumo_mensal_eventos[licenca_data_obj].append(f"Retorno de Licença de Funcionário: {nome}")
+                        print(f"DEBUG_MENSAL: Retorno de licença de funcionário {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} adicionado ao resumo mensal.")
                 except ValueError:
-                    print(f"AVISO_MENSAL: Formato de data de retorno de licença inválido para {nome}: {data_retorno_licenca_str}")
+                    print(f"AVISO_MENSAL: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
+
+        # --- NOVO: Processa Clientes para o Resumo Mensal ---
+        for cliente in clientes:
+            nome = cliente['nome']
+            data_aniversario_str = cliente['data_aniversario']
+
+            # Aniversários de Clientes do Mês
+            try:
+                aniversario_data_obj = datetime.datetime.strptime(data_aniversario_str, '%d/%m/%Y').date()
+                if aniversario_data_obj.month == mes_analise_num:
+                    data_completa_evento = aniversario_data_obj.replace(year=ano_analise_num)
+                    if data_completa_evento not in resumo_mensal_eventos:
+                        resumo_mensal_eventos[data_completa_evento] = []
+                    resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Cliente: {nome}")
+                    print(f"DEBUG_MENSAL: Aniversário de cliente {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
+            except ValueError:
+                print(f"AVISO_MENSAL: Formato de data de aniversário de cliente inválido para {nome}: {data_aniversario_str}")
+
 
         # --- Enviar E-mail de Resumo Mensal ---
         if not resumo_mensal_eventos:
@@ -254,7 +298,7 @@ def send_monthly_summary_job():
             assunto = f"Resumo RH: Nenhuma Data Importante para {nome_do_mes_pt.capitalize()}/{ano_analise_num}"
             corpo_html = f"""
             <html><body>
-                <p>Olá Gestores,</p>
+                <p>Olá Gestor(a)s,</p>
                 <p>Não há datas importantes agendadas para {nome_do_mes_pt.capitalize()} de {ano_analise_num}.</p>
                 <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
             </body></html>
@@ -269,7 +313,7 @@ def send_monthly_summary_job():
             corpo_html = f"""
             <html>
             <body>
-                <p>Olá Gestores,</p>
+                <p>Olá Gestor(a)s,</p>
                 <p>Segue o resumo das datas importantes para <b>{nome_do_mes_pt.capitalize()} de {ano_analise_num}</b>:</p>
                 <ul>
                     {''.join(corpo_eventos)}
@@ -297,8 +341,10 @@ def trigger_notification_test(job_id):
 @app.route('/')
 def index():
     funcionarios = get_all_funcionarios()
-    return render_template('index.html', funcionarios=funcionarios)
+    clientes = get_all_clientes() # NOVO: Passa os clientes para o template
+    return render_template('index.html', funcionarios=funcionarios, clientes=clientes) # NOVO: Passa clientes
 
+# --- Rotas para Funcionários (existentes) ---
 @app.route('/adicionar_funcionario', methods=['POST'])
 def adicionar_funcionario():
     nome = request.form['nome'].strip()
@@ -364,6 +410,58 @@ def deletar_funcionario(funcionario_id):
         return jsonify({"success": True, "message": "Pessoa deletada com sucesso!"})
     except Exception as e:
         return jsonify({"success": False, "message": f"Erro ao deletar: {str(e)}"}), 500
+
+# --- NOVO: Rotas para Clientes ---
+@app.route('/adicionar_cliente', methods=['POST'])
+def adicionar_cliente():
+    nome = request.form['nome_cliente'].strip()
+    data_aniversario = request.form['data_aniversario_cliente'].strip()
+
+    if not nome or not data_aniversario:
+        return jsonify({"success": False, "message": "Nome e Data de Aniversário do cliente são obrigatórios."}), 400
+
+    if not validar_data_formato(data_aniversario):
+        return jsonify({"success": False, "message": "Data de Aniversário do cliente inválida. Use DD/MM/AAAA."}), 400
+
+    try:
+        insert_cliente(nome, data_aniversario)
+        return jsonify({"success": True, "message": "Cliente registrado com sucesso!"})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Erro ao registrar cliente: {str(e)}"}), 500
+
+@app.route('/get_cliente/<int:cliente_id>', methods=['GET'])
+def get_cliente_json(cliente_id):
+    cliente = get_cliente_by_id(cliente_id)
+    if cliente:
+        return jsonify(dict(cliente))
+    return jsonify({"success": False, "message": "Cliente não encontrado."}), 404
+
+@app.route('/editar_cliente', methods=['POST'])
+def editar_cliente():
+    cliente_id = request.form.get('id_editar_cliente')
+    nome = request.form['nome_editar_cliente'].strip()
+    data_aniversario = request.form['data_aniversario_editar_cliente'].strip()
+
+    if not cliente_id or not nome or not data_aniversario:
+        return jsonify({"success": False, "message": "Todos os campos obrigatórios devem ser preenchidos para edição do cliente."}), 400
+
+    if not validar_data_formato(data_aniversario):
+        return jsonify({"success": False, "message": "Data de Aniversário do cliente inválida. Use DD/MM/AAAA."}), 400
+
+    try:
+        update_cliente(cliente_id, nome, data_aniversario)
+        return jsonify({"success": True, "message": "Cliente atualizado com sucesso!"})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Erro ao atualizar cliente: {str(e)}"}), 500
+
+@app.route('/deletar_cliente/<int:cliente_id>', methods=['POST'])
+def deletar_cliente(cliente_id):
+    try:
+        delete_cliente(cliente_id)
+        return jsonify({"success": True, "message": "Cliente deletado com sucesso!"})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Erro ao deletar cliente: {str(e)}"}), 500
+
 
 def validar_data_formato(data_str):
     try:
