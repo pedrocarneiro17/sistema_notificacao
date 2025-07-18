@@ -468,7 +468,7 @@ def importar_clientes_csv():
 
     if file:
         try:
-            stream = io.StringIO(file.stream.read().decode("UTF8"))
+            stream = io.StringIO(file.stream.read().decode("latin-1"))
             reader = csv.reader(stream)
             
             imported_count = 0
