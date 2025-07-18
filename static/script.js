@@ -7,20 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const editFuncionarioModal = document.getElementById('editFuncionarioModal');
     const editFuncionarioForm = document.getElementById('editFuncionarioForm');
     const mensagemEditarFuncionarioDiv = document.getElementById('mensagemEditarFuncionario');
-    const closeFuncionarioModalBtn = document.querySelector('.close-button.funcionario');
+    const closeFuncionarioModalBtn = document.querySelector('.close-button.funcionario'); // Botão de fechar específico
 
     // --- Referências para Formulários e Mensagens de Clientes ---
-    const registroClienteForm = document.getElementById('registroClienteForm');
-    const mensagemClienteDiv = document.getElementById('mensagemCliente');
-    const clientesTableBody = document.querySelector('#clientesTable tbody');
-    const editClienteModal = document.getElementById('editClienteModal');
-    const editClienteForm = document.getElementById('editClienteForm');
-    const mensagemEditarClienteDiv = document.getElementById('mensagemEditarCliente');
-    const closeClienteModalBtn = document.querySelector('.close-button.cliente');
-
-    // --- Referências para Importação de Clientes via CSV ---
-    const importarClienteForm = document.getElementById('importarClienteForm');
-    const mensagemImportacaoDiv = document.getElementById('mensagemImportacao');
+    const registroClienteForm = document.getElementById('registroClienteForm'); // NOVO
+    const mensagemClienteDiv = document.getElementById('mensagemCliente'); // NOVO
+    const clientesTableBody = document.querySelector('#clientesTable tbody'); // NOVO
+    const editClienteModal = document.getElementById('editClienteModal'); // NOVO
+    const editClienteForm = document.getElementById('editClienteForm'); // NOVO
+    const mensagemEditarClienteDiv = document.getElementById('mensagemEditarCliente'); // NOVO
+    const closeClienteModalBtn = document.querySelector('.close-button.cliente'); // NOVO: Botão de fechar específico
 
 
     // --- Campos de Data para Formatação Automática ---
@@ -31,9 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('data_admissao_editar_funcionario'),
         document.getElementById('data_aniversario_editar_funcionario'),
         document.getElementById('data_retorno_licenca_editar_funcionario'),
-        document.getElementById('data_aniversario_cliente'),
-        document.getElementById('data_aniversario_editar_cliente')
-    ].filter(Boolean);
+        document.getElementById('data_aniversario_cliente'), // NOVO
+        document.getElementById('data_aniversario_editar_cliente') // NOVO
+    ].filter(Boolean); // Filtra nulls se algum ID não for encontrado
 
     // --- Função para formatar a data automaticamente (DD/MM/AAAA) ---
     function formatarData(event) {
@@ -83,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showMessage(mensagemFuncionarioDiv, result.message, 'success');
                 registroFuncionarioForm.reset();
-                await carregarTabelas();
+                await carregarTabelas(); // Carrega ambas as tabelas
             } else {
                 showMessage(mensagemFuncionarioDiv, result.message, 'error');
             }
@@ -93,14 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Lógica de Registro de Cliente ---
+    // --- NOVO: Lógica de Registro de Cliente ---
     registroClienteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(registroClienteForm);
         showMessage(mensagemClienteDiv, '', '');
 
         try {
-            const response = await fetch('/adicionar_cliente', {
+            const response = await fetch('/adicionar_cliente', { // Nova rota
                 method: 'POST',
                 body: formData
             });
@@ -109,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 showMessage(mensagemClienteDiv, result.message, 'success');
                 registroClienteForm.reset();
-                await carregarTabelas();
+                await carregarTabelas(); // Carrega ambas as tabelas
             } else {
                 showMessage(mensagemClienteDiv, result.message, 'error');
             }
@@ -119,39 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- NOVO: Lógica de Importação de Clientes via CSV ---
-    importarClienteForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const formData = new FormData(importarClienteForm);
-        showMessage(mensagemImportacaoDiv, '', '');
-
-        try {
-            const response = await fetch('/importar_clientes_csv', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-
-            if (response.ok) {
-                showMessage(mensagemImportacaoDiv, result.message, 'success');
-                importarClienteForm.reset();
-                await carregarTabelas();
-            } else {
-                showMessage(mensagemImportacaoDiv, result.message, 'error');
-            }
-        } catch (error) {
-            console.error('Erro ao importar clientes:', error);
-            showMessage(mensagemImportacaoDiv, 'Erro de comunicação ao importar clientes.', 'error');
-        }
-    });
-
 
     // --- Lógica de Edição/Exclusão (Geral para Funcionário e Cliente) ---
+    // Event listener para ambas as tabelas (funcionários e clientes)
     document.body.addEventListener('click', async (event) => {
         // --- Lógica de Edição ---
         if (event.target.classList.contains('editar-btn')) {
             const id = event.target.dataset.id;
-            const type = event.target.dataset.type;
+            const type = event.target.dataset.type; // 'funcionario' ou 'cliente'
 
             if (type === 'funcionario') {
                 showMessage(mensagemEditarFuncionarioDiv, '', '');
@@ -172,16 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Erro ao buscar funcionário para edição:', error);
                     showMessage(mensagemFuncionarioDiv, 'Erro ao carregar dados do funcionário para edição.', 'error');
                 }
-            } else if (type === 'cliente') {
+            } else if (type === 'cliente') { // NOVO: Lógica de Edição para Cliente
                 showMessage(mensagemEditarClienteDiv, '', '');
                 try {
-                    const response = await fetch(`/get_cliente/${id}`);
+                    const response = await fetch(`/get_cliente/${id}`); // Nova rota
                     const cliente = await response.json();
                     if (response.ok) {
                         document.getElementById('id_editar_cliente').value = cliente.id;
                         document.getElementById('nome_editar_cliente').value = cliente.nome;
                         document.getElementById('data_aniversario_editar_cliente').value = cliente.data_aniversario;
-                        editClienteModal.style.display = 'flex';
+                        editClienteModal.style.display = 'flex'; // Exibe o modal do cliente
                     } else {
                         showMessage(mensagemClienteDiv, cliente.message, 'error');
                     }
@@ -194,11 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Lógica de Exclusão ---
         else if (event.target.classList.contains('deletar-btn')) {
             const id = event.target.dataset.id;
-            const type = event.target.dataset.type;
+            const type = event.target.dataset.type; // 'funcionario' ou 'cliente'
             const confirmacao = confirm(`Tem certeza que deseja excluir ${type === 'funcionario' ? 'este funcionário' : 'este cliente'}?`);
 
             if (confirmacao) {
-                const url = type === 'funcionario' ? `/deletar_funcionario/${id}` : `/deletar_cliente/${id}`;
+                const url = type === 'funcionario' ? `/deletar_funcionario/${id}` : `/deletar_cliente/${id}`; // Novas rotas
                 const mensagemDiv = type === 'funcionario' ? mensagemFuncionarioDiv : mensagemClienteDiv;
 
                 try {
@@ -211,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (response.ok) {
                         showMessage(mensagemDiv, result.message, 'success');
-                        await carregarTabelas();
+                        await carregarTabelas(); // Carrega ambas as tabelas
                     } else {
                         showMessage(mensagemDiv, result.message, 'error');
                     }
@@ -223,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Fechar Modais ---
+    // --- Fechar Modal de Funcionário ---
     closeFuncionarioModalBtn.addEventListener('click', () => {
         editFuncionarioModal.style.display = 'none';
     });
@@ -233,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- NOVO: Fechar Modal de Cliente ---
     closeClienteModalBtn.addEventListener('click', () => {
         editClienteModal.style.display = 'none';
     });
@@ -242,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Enviar Dados dos Formulários de Edição ---
+
+    // --- Enviar Dados do Formulário de Edição de Funcionário ---
     editFuncionarioForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(editFuncionarioForm);
@@ -268,13 +241,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- NOVO: Enviar Dados do Formulário de Edição de Cliente ---
     editClienteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(editClienteForm);
         showMessage(mensagemEditarClienteDiv, '', '');
 
         try {
-            const response = await fetch('/editar_cliente', {
+            const response = await fetch('/editar_cliente', { // Nova rota
                 method: 'POST',
                 body: formData
             });
@@ -295,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Função para Recarregar Ambas as Tabelas ---
-    async function carregarTabelas() {
+    async function carregarTabelas() { // RENOMEADA
         try {
             const response = await fetch('/');
             const html = await response.text();
@@ -303,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
+            // Atualiza a tabela de Funcionários
             const newFuncionariosTableBody = doc.querySelector('#funcionariosTable tbody');
             if (newFuncionariosTableBody) {
                 funcionariosTableBody.innerHTML = newFuncionariosTableBody.innerHTML;
@@ -310,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Não foi possível encontrar o tbody da tabela de funcionários na resposta.");
             }
 
+            // NOVO: Atualiza a tabela de Clientes
             const newClientesTableBody = doc.querySelector('#clientesTable tbody');
             if (newClientesTableBody) {
                 clientesTableBody.innerHTML = newClientesTableBody.innerHTML;
@@ -319,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Erro ao carregar tabelas:', error);
-            showMessage(mensagemFuncionarioDiv, 'Erro ao carregar a lista de pessoas.', 'error');
+            showMessage(mensagemFuncionarioDiv, 'Erro ao carregar a lista de pessoas.', 'error'); // Usa a mensagem de funcionário
         }
     }
 });

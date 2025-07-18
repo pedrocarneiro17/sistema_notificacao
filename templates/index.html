@@ -10,120 +10,111 @@
     <div class="container">
         <h1>Gerenciador de Datas Importantes</h1>
 
-        <div class="section">
-            <h2>Registrar Nova Pessoa (Funcionário)</h2>
-            <form id="registroFuncionarioForm">
-                <div class="form-group">
-                    <label for="nome">Nome:</label>
-                    <input type="text" id="nome" name="nome" required>
-                </div>
-                <div class="form-group">
-                    <label for="data_admissao">Data Admissão (DD/MM/AAAA):</label>
-                    <input type="text" id="data_admissao" name="data_admissao" placeholder="Ex: 01/01/2020" required>
-                </div>
-                <div class="form-group">
-                    <label for="data_aniversario">Data Aniversário (DD/MM/AAAA):</label>
-                    <input type="text" id="data_aniversario" name="data_aniversario" placeholder="Ex: 15/05/1990" required>
-                </div>
-                <div class="form-group">
-                    <label for="data_retorno_licenca">Retorno Licença (DD/MM/AAAA - Opcional):</label>
-                    <input type="text" id="data_retorno_licenca" name="data_retorno_licenca" placeholder="Ex: 10/03/2025">
-                </div>
-                <button type="submit">Salvar Funcionário</button>
-            </form>
-            <div id="mensagemFuncionario" class="message"></div>
-        </div>
+        {# --- INÍCIO DO GRUPO DE FUNCIONÁRIOS --- #}
+        <div class="content-group employee-group">
+            <div class="section">
+                <h2>Registrar Nova Pessoa (Funcionário)</h2>
+                <form id="registroFuncionarioForm">
+                    <div class="form-group">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="nome" name="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data_admissao">Data Admissão (DD/MM/AAAA):</label>
+                        <input type="text" id="data_admissao" name="data_admissao" placeholder="Ex: 01/01/2020" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data_aniversario">Data Aniversário (DD/MM/AAAA):</label>
+                        <input type="text" id="data_aniversario" name="data_aniversario" placeholder="Ex: 15/05/1990" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data_retorno_licenca">Retorno Licença (DD/MM/AAAA - Opcional):</label>
+                        <input type="text" id="data_retorno_licenca" name="data_retorno_licenca" placeholder="Ex: 10/03/2025">
+                    </div>
+                    <button type="submit">Salvar Funcionário</button>
+                </form>
+                <div id="mensagemFuncionario" class="message"></div>
+            </div>
 
-        <div class="section">
-            <h2>Pessoas Registradas (Funcionários)</h2>
-            <table id="funcionariosTable">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Admissão</th>
-                        <th>Aniversário</th>
-                        <th>Retorno Licença</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for funcionario in funcionarios %}
-                    <tr>
-                        <td>{{ funcionario.nome }}</td>
-                        <td>{{ funcionario.data_admissao }}</td>
-                        <td>{{ funcionario.data_aniversario }}</td>
-                        <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
-                        <td>
-                            <button class="editar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Editar</button>
-                            <button class="deletar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Excluir</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="section">
+                <h2>Pessoas Registradas (Funcionários)</h2>
+                <table id="funcionariosTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Admissão</th>
+                            <th>Aniversário</th>
+                            <th>Retorno Licença</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for funcionario in funcionarios %}
+                        <tr>
+                            <td>{{ funcionario.nome }}</td>
+                            <td>{{ funcionario.data_admissao }}</td>
+                            <td>{{ funcionario.data_aniversario }}</td>
+                            <td>{{ funcionario.data_retorno_licenca if funcionario.data_retorno_licenca else 'N/A' }}</td>
+                            <td>
+                                <button class="editar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Editar</button>
+                                <button class="deletar-btn" data-id="{{ funcionario.id }}" data-type="funcionario">Excluir</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+        {# --- FIM DO GRUPO DE FUNCIONÁRIOS --- #}
 
-        {# AQUI TERMINA A SEÇÃO DE FUNCIONÁRIOS E COMEÇA A NOVA SEÇÃO #}
+        {# --- INÍCIO DO GRUPO DE CLIENTES --- #}
+        <div class="content-group client-group">
+            <div class="section">
+                <h2>Registrar Novo Cliente</h2>
+                <form id="registroClienteForm">
+                    <div class="form-group">
+                        <label for="nome_cliente">Nome do Cliente:</label>
+                        <input type="text" id="nome_cliente" name="nome_cliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="data_aniversario_cliente">Data Aniversário (DD/MM/AAAA):</label>
+                        <input type="text" id="data_aniversario_cliente" name="data_aniversario_cliente" placeholder="Ex: 20/11/1985" required>
+                    </div>
+                    <button type="submit">Salvar Cliente</button>
+                </form>
+                <div id="mensagemCliente" class="message"></div>
+            </div>
 
-        <div class="section" id="registroClienteSection"> {# ESTA É A PRIMEIRA SEÇÃO DE CLIENTES #}
-            <h2>Registrar Novo Cliente</h2>
-            <form id="registroClienteForm">
-                <div class="form-group">
-                    <label for="nome_cliente">Nome do Cliente:</label>
-                    <input type="text" id="nome_cliente" name="nome_cliente" required>
-                </div>
-                <div class="form-group">
-                    <label for="data_aniversario_cliente">Data Aniversário (DD/MM/AAAA):</label>
-                    <input type="text" id="data_aniversario_cliente" name="data_aniversario_cliente" placeholder="Ex: 20/11/1985" required>
-                </div>
-                <button type="submit">Salvar Cliente</button>
-            </form>
-            <div id="mensagemCliente" class="message"></div>
+            <div class="section">
+                <h2>Clientes Registrados</h2>
+                <table id="clientesTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Aniversário</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>{{ cliente.nome }}</td>
+                            <td>{{ cliente.data_aniversario }}</td>
+                            <td>
+                                <button class="editar-btn" data-id="{{ cliente.id }}" data-type="cliente">Editar</button>
+                                <button class="deletar-btn" data-id="{{ cliente.id }}" data-type="cliente">Excluir</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="section">
-            <h2>Clientes Registrados</h2>
-            <table id="clientesTable">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Aniversário</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cliente in clientes %}
-                    <tr>
-                        <td>{{ cliente.nome }}</td>
-                        <td>{{ cliente.data_aniversario }}</td>
-                        <td>
-                            <button class="editar-btn" data-id="{{ cliente.id }}" data-type="cliente">Editar</button>
-                            <button class="deletar-btn" data-id="{{ cliente.id }}" data-type="cliente">Excluir</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {# --- Seção de Importação de Clientes via CSV --- #}
-        <div class="section" id="importarClienteSection">
-            <h2>Importar Clientes (CSV)</h2>
-            <p>Formato do CSV: Nome do Cliente,Data de Aniversário (DD/MM/AAAA)</p>
-            <p>Exemplo: <code>João Silva,01/01/1990<br>Maria Santos,15/05/1988</code></p>
-            <form id="importarClienteForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="csv_file">Selecione o arquivo CSV:</label>
-                    <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
-                </div>
-                <button type="submit">Importar Clientes</button>
-            </form>
-            <div id="mensagemImportacao" class="message"></div>
-        </div>
+        {# --- FIM DO GRUPO DE CLIENTES --- #}
 
     </div>
 
-    {# --- Modais --- #}
+    {# --- Modais (sem alteração) --- #}
     <div id="editFuncionarioModal" class="modal">
         <div class="modal-content">
             <span class="close-button funcionario">&times;</span>
