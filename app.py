@@ -1,23 +1,21 @@
 # app.py
 from flask import Flask, render_template, request, jsonify
-# NOVO: Importa as novas funções de cliente
 from database import insert_funcionario, get_all_funcionarios, create_table, get_funcionario_by_id, update_funcionario, delete_funcionario, delete_licenca_passada, insert_cliente, get_all_clientes, get_cliente_by_id, update_cliente, delete_cliente
 import datetime
-from flask_apscheduler import APScheduler
+import os # Necessário para os.environ.get
+import csv # Para lidar com arquivos CSV
+import io # Para ler o CSV da memória
+import smtplib # Para enviar e-mails
+from email.mime.text import MIMEText # Para corpo de e-mail HTML
+from email.mime.multipart import MIMEMultipart # Para e-mails multipart
+from flask_apscheduler import APScheduler # Para agendamento de tarefas
 
-# --- Importações para E-mail ---
-import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-# NOVO: Dicionário para mapear números dos meses para nomes em português
+# Dicionário para mapear números dos meses para nomes em português (solução robusta)
 MESES_EM_PORTUGUES = {
     1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril",
     5: "maio", 6: "junho", 7: "julho", 8: "agosto",
     9: "setembro", 10: "outubro", 11: "novembro", 12: "dezembro"
 }
-
 
 app = Flask(__name__)
 scheduler = APScheduler()
@@ -34,9 +32,6 @@ EMAIL_SMTP_SERVER = "smtp.gmail.com"
 EMAIL_SMTP_PORT = 587
 
 def enviar_email(destinatarios_email, assunto, corpo_html):
-    """
-    Função para enviar e-mail via SMTP do Gmail para múltiplos destinatários.
-    """
     if not EMAIL_SENDER or not EMAIL_PASSWORD:
         print("Erro: Credenciais de e-mail do remetente não configuradas. Verifique as variáveis de ambiente EMAIL_SENDER e EMAIL_PASSWORD.")
         return False
@@ -74,7 +69,7 @@ def check_daily_notifications_job():
         print(f"DEBUG_DIARIO: Data atual (hoje): {hoje.strftime('%d/%m/%Y')}")
 
         funcionarios = get_all_funcionarios()
-        clientes = get_all_clientes() # NOVO: Obtém todos os clientes
+        clientes = get_all_clientes()
         delete_licenca_passada()
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
@@ -143,7 +138,7 @@ def check_daily_notifications_job():
                 except ValueError:
                     print(f"AVISO_DIARIO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
 
-        # --- NOVO: Processa Clientes ---
+        # --- Processa Clientes ---
         for cliente in clientes:
             nome = cliente['nome']
             data_aniversario_str = cliente['data_aniversario']
@@ -174,7 +169,6 @@ def check_daily_notifications_job():
         else:
             for (data_evento, tipo_evento_notificacao), nomes_envolvidos in eventos_para_notificar.items():
                 lista_nomes = ", ".join(nomes_envolvidos)
-                # Ajusta para mais de um 'e' se houver mais de 2 nomes no assunto
                 if len(nomes_envolvidos) > 1:
                    assunto_nomes = f"{', '.join(nomes_envolvidos[:-1])} e {nomes_envolvidos[-1]}"
                 else:
@@ -185,7 +179,7 @@ def check_daily_notifications_job():
                 corpo = f"""
                 <html>
                 <body>
-                    <p>Olá Gestores,</p>
+                    <p>Olá Gestor(a)s,</p>
                     <p>Um(a) ou mais evento(s) importante(s) se aproxima(m):</p>
                     <ul>
                         <li>Faltam <b>{tipo_evento_notificacao.split('(')[1].replace(')', '')}</b> para o(s) {tipo_evento_notificacao.split('(')[0].strip()} de: <b>{lista_nomes}</b></li>
@@ -207,29 +201,27 @@ def send_monthly_summary_job():
         print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando envio de resumo mensal de datas importantes...")
         hoje = datetime.date.today()
 
-        # Decide qual mês analisar (o atual se for dia 1, ou o próximo se for um teste manual)
         mes_analise_data = hoje
         if hoje.day != 1:
-            mes_analise_data = (hoje.replace(day=1) + datetime.timedelta(days=32)).replace(day=1) # Próximo mês
+            mes_analise_data = (hoje.replace(day=1) + datetime.timedelta(days=32)).replace(day=1)
 
         mes_analise_num = mes_analise_data.month
         ano_analise_num = mes_analise_data.year
 
-        # Obtém o nome do mês em português do dicionário
         nome_do_mes_pt = MESES_EM_PORTUGUES.get(mes_analise_num, f"Mês {mes_analise_num}")
 
 
-        print(f"DEBUG_MENSAL: Mês/Ano de análise para resumo: {nome_do_mes_pt.capitalize()}/{ano_analise_num}")
+        print(f"DEBUG: Mês/Ano de análise para resumo: {nome_do_mes_pt.capitalize()}/{ano_analise_num}")
 
         funcionarios = get_all_funcionarios()
-        clientes = get_all_clientes() # NOVO: Obtém todos os clientes
+        clientes = get_all_clientes()
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
         if not destinatarios_gestor:
-            print("ERRO_MENSAL: E-mail(s) do gestor não configurado(s). Resumo mensal não enviado.")
+            print("ERRO: E-mail(s) do gestor não configurado(s). Resumo mensal não enviado.")
             return
 
-        resumo_mensal_eventos = {} # Chave: datetime.date, Valor: lista de descrições de eventos
+        resumo_mensal_eventos = {}
 
         # --- Processa Funcionários para o Resumo Mensal ---
         for func in funcionarios:
@@ -246,9 +238,9 @@ def send_monthly_summary_job():
                     if data_completa_evento not in resumo_mensal_eventos:
                         resumo_mensal_eventos[data_completa_evento] = []
                     resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Funcionário: {nome}")
-                    print(f"DEBUG_MENSAL: Aniversário de funcionário {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
+                    print(f"DEBUG: Aniversário de funcionário {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
             except ValueError:
-                print(f"AVISO_MENSAL: Formato de data de aniversário de funcionário inválido para {nome}: {data_aniversario_str}")
+                print(f"AVISO: Formato de data de aniversário de funcionário inválido para {nome}: {data_aniversario_str}")
 
             # Admissões do Mês
             try:
@@ -258,9 +250,9 @@ def send_monthly_summary_job():
                     if data_completa_evento not in resumo_mensal_eventos:
                         resumo_mensal_eventos[data_completa_evento] = []
                     resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Admissão de Funcionário: {nome}")
-                    print(f"DEBUG_MENSAL: Admissão de funcionário {nome} em {data_completa_evento.strftime('%d/%m/%Y')} adicionada ao resumo mensal.")
+                    print(f"DEBUG: Admissão de funcionário {nome} em {data_completa_evento.strftime('%d/%m/%Y')} adicionada ao resumo mensal.")
             except ValueError:
-                print(f"AVISO_MENSAL: Formato de data de admissão de funcionário inválido para {nome}: {data_admissao_str}")
+                print(f"AVISO: Formato de data de admissão de funcionário inválido para {nome}: {data_admissao_str}")
 
             # Retorno de Licença do Mês (se existir)
             if data_retorno_licenca_str:
@@ -270,11 +262,11 @@ def send_monthly_summary_job():
                         if licenca_data_obj not in resumo_mensal_eventos:
                             resumo_mensal_eventos[licenca_data_obj] = []
                         resumo_mensal_eventos[licenca_data_obj].append(f"Retorno de Licença de Funcionário: {nome}")
-                        print(f"DEBUG_MENSAL: Retorno de licença de funcionário {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} adicionado ao resumo mensal.")
+                        print(f"DEBUG: Retorno de licença de funcionário {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} adicionado ao resumo mensal.")
                 except ValueError:
-                    print(f"AVISO_MENSAL: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
+                    print(f"AVISO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
 
-        # --- NOVO: Processa Clientes para o Resumo Mensal ---
+        # --- Processa Clientes para o Resumo Mensal ---
         for cliente in clientes:
             nome = cliente['nome']
             data_aniversario_str = cliente['data_aniversario']
@@ -287,18 +279,18 @@ def send_monthly_summary_job():
                     if data_completa_evento not in resumo_mensal_eventos:
                         resumo_mensal_eventos[data_completa_evento] = []
                     resumo_mensal_eventos[data_completa_evento].append(f"Aniversário de Cliente: {nome}")
-                    print(f"DEBUG_MENSAL: Aniversário de cliente {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
+                    print(f"DEBUG: Aniversário de cliente {nome} em {data_completa_evento.strftime('%d/%m')} adicionado ao resumo mensal.")
             except ValueError:
-                print(f"AVISO_MENSAL: Formato de data de aniversário de cliente inválido para {nome}: {data_aniversario_str}")
+                print(f"AVISO: Formato de data de aniversário de cliente inválido para {nome}: {data_aniversario_str}")
 
 
         # --- Enviar E-mail de Resumo Mensal ---
         if not resumo_mensal_eventos:
-            print(f"DEBUG_MENSAL: Nenhum evento encontrado para o mês {nome_do_mes_pt}/{ano_analise_num}.")
+            print(f"DEBUG: Nenhum evento encontrado para o mês {nome_do_mes_pt}/{ano_analise_num}.")
             assunto = f"Resumo RH: Nenhuma Data Importante para {nome_do_mes_pt.capitalize()}/{ano_analise_num}"
             corpo_html = f"""
             <html><body>
-                <p>Olá Gestores,</p>
+                <p>Olá Gestor(a)s,</p>
                 <p>Não há datas importantes agendadas para {nome_do_mes_pt.capitalize()} de {ano_analise_num}.</p>
                 <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
             </body></html>
@@ -313,7 +305,7 @@ def send_monthly_summary_job():
             corpo_html = f"""
             <html>
             <body>
-                <p>Olá Gestores,</p>
+                <p>Olá Gestor(a)s,</p>
                 <p>Segue o resumo das datas importantes para <b>{nome_do_mes_pt.capitalize()} de {ano_analise_num}</b>:</p>
                 <ul>
                     {''.join(corpo_eventos)}
@@ -341,10 +333,9 @@ def trigger_notification_test(job_id):
 @app.route('/')
 def index():
     funcionarios = get_all_funcionarios()
-    clientes = get_all_clientes() # NOVO: Passa os clientes para o template
-    return render_template('index.html', funcionarios=funcionarios, clientes=clientes) # NOVO: Passa clientes
+    clientes = get_all_clientes()
+    return render_template('index.html', funcionarios=funcionarios, clientes=clientes)
 
-# --- Rotas para Funcionários (existentes) ---
 @app.route('/adicionar_funcionario', methods=['POST'])
 def adicionar_funcionario():
     nome = request.form['nome'].strip()
@@ -411,7 +402,7 @@ def deletar_funcionario(funcionario_id):
     except Exception as e:
         return jsonify({"success": False, "message": f"Erro ao deletar: {str(e)}"}), 500
 
-# --- NOVO: Rotas para Clientes ---
+# --- Rotas para Clientes ---
 @app.route('/adicionar_cliente', methods=['POST'])
 def adicionar_cliente():
     nome = request.form['nome_cliente'].strip()
@@ -462,6 +453,66 @@ def deletar_cliente(cliente_id):
     except Exception as e:
         return jsonify({"success": False, "message": f"Erro ao deletar cliente: {str(e)}"}), 500
 
+# --- Rota para Importação de Clientes via CSV ---
+@app.route('/importar_clientes_csv', methods=['POST'])
+def importar_clientes_csv():
+    if 'csv_file' not in request.files:
+        return jsonify({"success": False, "message": "Nenhum arquivo CSV enviado."}), 400
+
+    file = request.files['csv_file']
+    if file.filename == '':
+        return jsonify({"success": False, "message": "Nenhum arquivo selecionado."}), 400
+
+    if not file.filename.lower().endswith('.csv'):
+        return jsonify({"success": False, "message": "Formato de arquivo inválido. Por favor, envie um arquivo CSV (.csv)."}), 400
+
+    if file:
+        try:
+            stream = io.StringIO(file.stream.read().decode("UTF8"))
+            reader = csv.reader(stream)
+            
+            imported_count = 0
+            skipped_count = 0
+            errors = []
+
+            for i, row in enumerate(reader):
+                if not row or len(row) < 2:
+                    skipped_count += 1
+                    errors.append(f"Linha {i+1}: Linha inválida (vazia ou poucas colunas).")
+                    continue
+
+                nome = row[0].strip()
+                data_aniversario = row[1].strip()
+
+                if not nome or not data_aniversario:
+                    skipped_count += 1
+                    errors.append(f"Linha {i+1}: Nome ou Data de Aniversário vazios.")
+                    continue
+
+                if not validar_data_formato(data_aniversario):
+                    skipped_count += 1
+                    errors.append(f"Linha {i+1}: Formato de data inválido para '{data_aniversario}'. Use DD/MM/AAAA.")
+                    continue
+                
+                try:
+                    insert_cliente(nome, data_aniversario)
+                    imported_count += 1
+                except Exception as db_e:
+                    skipped_count += 1
+                    errors.append(f"Linha {i+1}: Erro ao inserir '{nome}' no banco de dados: {db_e}")
+
+            message = f"Importação concluída. {imported_count} cliente(s) importado(s)."
+            if skipped_count > 0:
+                message += f" {skipped_count} linha(s) ignorada(s)."
+            if errors:
+                message += " Erros: " + "; ".join(errors[:5])
+                if len(errors) > 5:
+                    message += " (e mais...)"
+
+            return jsonify({"success": True, "message": message})
+
+        except Exception as e:
+            return jsonify({"success": False, "message": f"Erro ao processar o arquivo CSV: {str(e)}"}), 500
 
 def validar_data_formato(data_str):
     try:
