@@ -201,7 +201,6 @@ def check_daily_notifications_job():
                     <ul>
                         <li>Faltam <b>{dias_restantes} dias</b> para o(s) {tipo_base_evento} de: <b>{lista_nomes_str}</b></li>
                         <li>Data do Evento: <b>{data_evento.strftime('%d/%m/%Y')}</b></li>
-                        <li>{anos_contajur_linha_vazia}</li>
                     </ul>
                     <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
                 </body>
