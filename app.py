@@ -2,13 +2,11 @@
 from flask import Flask, render_template, request, jsonify
 from database import insert_funcionario, get_all_funcionarios, create_table, get_funcionario_by_id, update_funcionario, delete_funcionario, delete_licenca_passada, insert_cliente, get_all_clientes, get_cliente_by_id, update_cliente, delete_cliente
 import datetime
-import os # Necessário para os.environ.get
-# REMOVIDO: import csv # Não é mais necessário para importação de CSV
-# REMOVIDO: import io # Não é mais necessário para importação de CSV
-import smtplib # Para enviar e-mails
-from email.mime.text import MIMEText # Para corpo de e-mail HTML
-from email.mime.multipart import MIMEMultipart # Para e-mails multipart
-from flask_apscheduler import APScheduler # Para agendamento de tarefas
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from flask_apscheduler import APScheduler
 
 # Dicionário para mapear números dos meses para nomes em português (solução robusta)
 MESES_EM_PORTUGUES = {
@@ -69,7 +67,7 @@ def check_daily_notifications_job():
         print(f"DEBUG_DIARIO: Data atual (hoje): {hoje.strftime('%d/%m/%Y')}")
 
         funcionarios = get_all_funcionarios()
-        clientes = get_all_clientes() # NOVO: Obtém todos os clientes
+        clientes = get_all_clientes()
         delete_licenca_passada()
 
         destinatarios_gestor = LISTA_EMAILS_GESTOR
@@ -77,7 +75,7 @@ def check_daily_notifications_job():
             print("ERRO_DIARIO: E-mail(s) do gestor não configurado(s). Notificações diárias não enviadas.")
             return
 
-        # NOVO: eventos_para_notificar agora armazena dicionários com 'nome' e 'anos_contajur' (opcional)
+        # eventos_para_notificar agora armazena dicionários com 'nome' e 'anos_contajur' (opcional)
         # Chave: (data_do_evento, tipo_base_do_evento_limpo, dias_restantes)
         # Valor: lista de {'nome': str, 'anos_contajur': int | None}
         eventos_para_notificar = {}
@@ -100,10 +98,10 @@ def check_daily_notifications_job():
                 dias_para_aniversario = (aniversario_este_ano - hoje).days
 
                 if dias_para_aniversario in [15, 10]:
-                    chave = (aniversario_este_ano, f"aniversário de funcionário", dias_para_aniversario) # Tipo base
+                    chave = (aniversario_este_ano, f"aniversário de funcionário", dias_para_aniversario)
                     if chave not in eventos_para_notificar:
                         eventos_para_notificar[chave] = []
-                    eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': None}) # Aniversário não tem "anos de Contajur"
+                    eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': None})
                     print(f"DEBUG_DIARIO: Aniversário de funcionário {nome} (em {dias_para_aniversario} dias) adicionado para consolidação.")
             except ValueError:
                 print(f"AVISO_DIARIO: Formato de data de aniversário de funcionário inválido para {nome}: {data_aniversario_str}")
@@ -118,8 +116,8 @@ def check_daily_notifications_job():
                 dias_para_admissao = (admissao_este_ano - hoje).days
 
                 if dias_para_admissao in [15, 10]:
-                    anos_de_contajur = hoje.year - admissao_data_obj.year # Calcula os anos de Contajur
-                    chave = (admissao_este_ano, f"admissão de funcionário", dias_para_admissao) # Tipo base
+                    anos_de_contajur = hoje.year - admissao_data_obj.year
+                    chave = (admissao_este_ano, f"admissão de funcionário", dias_para_admissao)
                     if chave not in eventos_para_notificar:
                         eventos_para_notificar[chave] = []
                     eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': anos_de_contajur})
@@ -134,10 +132,10 @@ def check_daily_notifications_job():
                     dias_para_licenca = (licenca_data_obj - hoje).days
 
                     if dias_para_licenca in [15, 10]:
-                        chave = (licenca_data_obj, f"retorno de licença de funcionário", dias_para_licenca) # Tipo base
+                        chave = (licenca_data_obj, f"retorno de licença de funcionário", dias_para_licenca)
                         if chave not in eventos_para_notificar:
                             eventos_para_notificar[chave] = []
-                        eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': None}) # Licença não tem "anos de Contajur"
+                        eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': None})
                         print(f"DEBUG_DIARIO: Retorno de licença de funcionário {nome} (em {dias_para_licenca} dias) adicionado para consolidação.")
                 except ValueError:
                     print(f"AVISO_DIARIO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
@@ -158,8 +156,8 @@ def check_daily_notifications_job():
                 dias_para_aniversario = (aniversario_este_ano - hoje).days
 
                 if dias_para_aniversario in [15, 10]:
-                    anos_de_contajur = hoje.year - aniversario_data_obj.year # Calcula os anos de Contajur
-                    chave = (aniversario_este_ano, f"aniversário de cliente", dias_para_aniversario) # Tipo base
+                    anos_de_contajur = hoje.year - aniversario_data_obj.year
+                    chave = (aniversario_este_ano, f"aniversário de cliente", dias_para_aniversario)
                     if chave not in eventos_para_notificar:
                         eventos_para_notificar[chave] = []
                     eventos_para_notificar[chave].append({'nome': nome, 'anos_contajur': anos_de_contajur})
@@ -172,39 +170,29 @@ def check_daily_notifications_job():
         if not eventos_para_notificar:
             print("DEBUG_DIARIO: Nenhuma data para notificação diária encontrada.")
         else:
-            # Itera sobre os eventos agrupados
             for (data_evento, tipo_base_evento, dias_restantes), detalhes_nomes_list in eventos_para_notificar.items():
-                # Extrai apenas os nomes para a lista e o assunto
-                nomes_apenas = [d['nome'] for d in detalhes_nomes_list]
-                lista_nomes_str = ", ".join(nomes_apenas)
+                # Formata a lista de nomes com os anos de Contajur, se aplicável
+                nomes_formatados_com_anos = []
+                for item in detalhes_nomes_list:
+                    if item['anos_contajur'] is not None:
+                        nomes_formatados_com_anos.append(f"{item['nome']} ({item['anos_contajur']} anos)")
+                    else:
+                        nomes_formatados_com_anos.append(item['nome'])
+                
+                lista_nomes_str = ", ".join(nomes_formatados_com_anos)
 
                 # Formata o assunto para singular/plural
-                if len(nomes_apenas) > 1:
-                   assunto_nomes = f"{', '.join(nomes_apenas[:-1])} e {nomes_apenas[-1]}"
+                nomes_apenas_para_assunto = [d['nome'] for d in detalhes_nomes_list]
+                if len(nomes_apenas_para_assunto) > 1:
+                   assunto_nomes = f"{', '.join(nomes_apenas_para_assunto[:-1])} e {nomes_apenas_para_assunto[-1]}"
                 else:
-                   assunto_nomes = nomes_apenas[0]
+                   assunto_nomes = nomes_apenas_para_assunto[0]
 
                 assunto = f"Lembrete RH: {tipo_base_evento.capitalize()} de {assunto_nomes}"
 
-                # Lógica para adicionar a linha "X anos de Contajur"
-                anos_contajur_linha = ""
-                if tipo_base_evento == "admissão de funcionário":
-                    if len(detalhes_nomes_list) == 1:
-                        anos = detalhes_nomes_list[0]['anos_contajur']
-                        # Texto EXATO solicitado para admissão de funcionário
-                        anos_contajur_linha = f"<li>Irá completar <b>{anos} anos</b> de Contajur</li>"
-                    else:
-                        # Para múltiplos, usar plural genérico
-                        anos_contajur_linha = "<li>Irá(ão) completar seus respectivos anos de Contajur</li>"
-                elif tipo_base_evento == "aniversário de cliente":
-                    if len(detalhes_nomes_list) == 1:
-                        anos = detalhes_nomes_list[0]['anos_contajur']
-                        # Texto EXATO solicitado para aniversário de cliente
-                        anos_contajur_linha = f"<li>O cliente vai fazer <b>{anos} anos</b> de Contajur</li>"
-                    else:
-                        # Para múltiplos, usar plural genérico
-                        anos_contajur_linha = "<li>Os clientes farão seus respectivos anos de Contajur</li>"
-
+                # REMOVIDO: Lógica para adicionar a linha "X anos de Contajur"
+                anos_contajur_linha_vazia = "" 
+                
                 corpo = f"""
                 <html>
                 <body>
@@ -213,7 +201,7 @@ def check_daily_notifications_job():
                     <ul>
                         <li>Faltam <b>{dias_restantes} dias</b> para o(s) {tipo_base_evento} de: <b>{lista_nomes_str}</b></li>
                         <li>Data do Evento: <b>{data_evento.strftime('%d/%m/%Y')}</b></li>
-                        {anos_contajur_linha}
+                        <li>{anos_contajur_linha_vazia}</li>
                     </ul>
                     <p>Atenciosamente,<br>Seu Sistema de Notificações de RH</p>
                 </body>
@@ -294,7 +282,7 @@ def send_monthly_summary_job():
                         resumo_mensal_eventos[licenca_data_obj].append(f"Retorno de Licença de Funcionário: {nome}")
                         print(f"DEBUG: Retorno de licença de funcionário {nome} em {licenca_data_obj.strftime('%d/%m/%Y')} adicionado ao resumo mensal.")
                 except ValueError:
-                    print(f"AVISO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_retorno_licenca_str}")
+                    print(f"AVISO: Formato de data de retorno de licença de funcionário inválido para {nome}: {data_aniversario_str}")
 
         # --- Processa Clientes para o Resumo Mensal ---
         for cliente in clientes:
@@ -363,7 +351,7 @@ def trigger_notification_test(job_id):
 @app.route('/')
 def index():
     funcionarios = get_all_funcionarios()
-    clientes = get_all_clientes() # NOVO: Passa os clientes para o template
+    clientes = get_all_clientes()
     return render_template('index.html', funcionarios=funcionarios, clientes=clientes) # NOVO: Passa clientes
 
 # --- Rotas para Funcionários (existentes) ---
